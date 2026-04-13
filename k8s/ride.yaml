@@ -20,4 +20,4 @@ metadata: {name: ride}
 spec:
   type: NodePort
   selector: {app: ride}
-  ports: [{port: 3000, nodePort: 303000}]
+  ports: [{port: 3000, nodePort: 30300}]
