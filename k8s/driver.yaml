@@ -1,0 +1,8 @@
+    metadata:
+      labels:
+        app: driver
+    spec:
+      containers:
+      - name: driver
+        image: driver
+        imagePullPolicy: Never
