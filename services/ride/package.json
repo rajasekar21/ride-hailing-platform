@@ -1,1 +1,1 @@
-{"dependencies":{"express":"^4","amqplib":"^0.10","sequelize":"^7","sqlite3":"^5"}}
+{"dependencies":{"express":"^4","amqplib":"^0.10","sequelize":"^6.37.0","sqlite3":"^5"}}
