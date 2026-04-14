@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: driver
+  name: payment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: driver
+      app: payment
   template:
     metadata:
       labels:
-        app: driver
+        app: payment
     spec:
       containers:
-      - name: driver
-        image: driver
+      - name: payment
+        image: payment
         imagePullPolicy: Never
         ports:
         - containerPort: 3000
@@ -31,10 +31,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: driver
+  name: payment
 spec:
   selector:
-    app: driver
+    app: payment
   ports:
     - port: 3000
       targetPort: 3000

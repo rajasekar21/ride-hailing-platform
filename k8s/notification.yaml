@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: driver
+  name: notification
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: driver
+      app: notification
   template:
     metadata:
       labels:
-        app: driver
+        app: notification
     spec:
       containers:
-      - name: driver
-        image: driver
+      - name: notification
+        image: notification
         imagePullPolicy: Never
         ports:
         - containerPort: 3000
@@ -31,10 +31,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: driver
+  name: notification
 spec:
   selector:
-    app: driver
+    app: notification
   ports:
     - port: 3000
       targetPort: 3000
