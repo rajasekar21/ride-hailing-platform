@@ -4,3 +4,4 @@
 ./scripts/seed.sh
 ./scripts/build.sh
 ./scripts/deploy.sh
+./scripts/frontend.sh

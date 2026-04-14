@@ -11,4 +11,12 @@ docker build -t payment ./services/payment
 docker build -t notification ./services/notification
 docker build -t auth ./services/auth
 
+# ✅ FRONTEND BUILD SAFE CHECK
+if [ -f "frontend/package.json" ]; then
+  echo "Building frontend..."
+  docker build -t frontend ./frontend
+else
+  echo "⚠️ Frontend not found, skipping build..."
+fi
+
 echo "✅ Images built"
