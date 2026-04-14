@@ -1,15 +1,13 @@
 #!/bin/bash
 set -e
+set -x
+
 echo "🚀 Starting Minikube..."
 
 minikube start --memory=4096 --cpus=2
-minikube addons enable metrics-server
 
-echo "☸️ Deploying services..."
+echo "🐳 Configuring Docker to use Minikube..."
 
-kubectl apply -f k8s/
+eval $(minikube docker-env)
 
-echo "⏳ Waiting for pods to be ready..."
-kubectl wait --for=condition=ready pod --all --timeout=180s
-
-echo "✅ All pods are ready"
+echo "✅ Minikube ready"
