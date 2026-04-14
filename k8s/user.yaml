@@ -11,6 +11,13 @@ spec:
       containers:
       - name: user
         image: user
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
         imagePullPolicy: Never
         ports: [{containerPort: 3000}]
 ---

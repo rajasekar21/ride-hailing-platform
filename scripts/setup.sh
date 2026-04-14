@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 echo "🔧 Installing dependencies..."
 
 IP=$(minikube ip)

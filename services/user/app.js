@@ -11,3 +11,6 @@ app.use(cors());
 app.use(express.json());
 app.post("/users",async(r,s)=>s.send(await U.create(r.body)));
 app.listen(3000);
+app.get("/health", (req, res) => {
+  res.send("OK");
+});

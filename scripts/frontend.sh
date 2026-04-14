@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 echo "🌐 Starting frontend..."
 
 cd frontend
