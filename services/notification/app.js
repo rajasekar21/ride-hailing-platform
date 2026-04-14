@@ -1,5 +1,13 @@
+const express = require("express");
+const cors = require("cors");
 
-const amqp=require("amqplib");
-(async()=>{const c=await amqp.connect("amqp://rabbitmq");const ch=await c.createChannel();
-await ch.assertQueue("notify");
-ch.consume("notify",msg=>{console.log("Notify",msg.content.toString());ch.ack(msg);});})();
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.get("/health", (req, res) => res.send("OK"));
+
+app.listen(3000, () => {
+  console.log("Notification service running");
+});
