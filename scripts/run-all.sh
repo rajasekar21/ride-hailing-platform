@@ -9,5 +9,5 @@ echo "🚀 Starting full system..."
 ./scripts/deploy.sh
 ./scripts/port-forward.sh
 ./scripts/frontend.sh
-
+./scripts/validate.sh
 echo "✅ System ready"
