@@ -14,7 +14,10 @@ This system follows a **microservices architecture** with:
 * Containerized deployment (Docker)
 * Orchestration (Kubernetes - Minikube)
 
----
+🔄 Flow
+
+User → Ride → Driver → Payment → Notification
+
 
 # 🧩 System Components
 
@@ -93,7 +96,12 @@ node seed.js
 | Orchestration | Kubernetes (Minikube) |
 
 ---
+## 🚀 Run Project
 
+```bash
+./scripts/run-all.sh
+
+---
 # 🚀 Setup Instructions
 
 ## 🔧 Prerequisites

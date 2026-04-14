@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 echo "🔌 Setting up port-forwarding..."
 
 mkdir -p logs

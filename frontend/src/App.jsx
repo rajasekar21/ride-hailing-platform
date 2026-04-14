@@ -8,6 +8,7 @@ function App() {
     getUsers().then((res) => setUsers(res.data));
   }, []);
 
+  if (!users.length) return <p>Loading users...</p>;
   return (
     <div>
       <h1>🚀 Ride Dashboard</h1>

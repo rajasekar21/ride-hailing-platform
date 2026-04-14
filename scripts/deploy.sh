@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 echo "🚀 Starting Minikube..."
 
 minikube start --memory=4096 --cpus=2

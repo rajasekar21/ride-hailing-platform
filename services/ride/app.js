@@ -12,3 +12,6 @@ app.post("/rides",async(r,s)=>{let ride=await R.create({status:"NEW"});ch.sendTo
 app.use(cors());
 app.use(express.json());
 app.listen(3000);
+app.get("/health", (req, res) => {
+  res.send("OK");
+});
