@@ -2,8 +2,24 @@
 
 echo "🌱 Seeding data..."
 
-(cd services/user && node seed.js)
-(cd services/ride && node seed.js 2>/dev/null || true)
-(cd services/payment && node seed.js 2>/dev/null || true)
+# USER SERVICE
+if [ -f "services/user/seed.js" ]; then
+  echo "Seeding user service..."
+  (cd services/user && node seed.js)
+else
+  echo "⚠️ user seed.js not found, skipping..."
+fi
 
-echo "✅ Data seeded"
+# RIDE SERVICE (optional)
+if [ -f "services/ride/seed.js" ]; then
+  echo "Seeding ride service..."
+  (cd services/ride && node seed.js)
+fi
+
+# PAYMENT SERVICE (optional)
+if [ -f "services/payment/seed.js" ]; then
+  echo "Seeding payment service..."
+  (cd services/payment && node seed.js)
+fi
+
+echo "✅ Data seeding complete"
