@@ -5,26 +5,25 @@ const { Sequelize, DataTypes } = require("sequelize");
 
 const db = new Sequelize({
   dialect: "sqlite",
-  storage: "users.db"
+  storage: "rides.db"
 });
 
-const User = db.define("User", {
-  name: DataTypes.STRING
+const Ride = db.define("Ride", {
+  status: DataTypes.STRING
 });
 
 async function seed() {
   await db.sync({ force: true });
 
   const results = [];
-
-  const filePath = path.join(__dirname, "users.csv");
+  const filePath = path.join(__dirname, "trips.csv");
 
   fs.createReadStream(filePath)
     .pipe(csv())
-    .on("data", (data) => results.push(data))
+    .on("data", (data) => results.push({ status: "COMPLETED" }))
     .on("end", async () => {
-      await User.bulkCreate(results);
-      console.log(`✅ Seeded ${results.length} users`);
+      await Ride.bulkCreate(results);
+      console.log(`✅ Seeded ${results.length} rides`);
     });
 }
 
