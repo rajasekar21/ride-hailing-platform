@@ -23,7 +23,7 @@ fi
 # ---------------------------
 echo "👤 Checking User API..."
 
-if curl -s http://localhost:3001/users | grep -q "\["; then
+if timeout 5 curl -s http://localhost:3001/users | grep -q "\["; then
   echo "✅ User API working"
 else
   echo "❌ User API failed"
