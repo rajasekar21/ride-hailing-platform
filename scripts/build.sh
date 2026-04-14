@@ -3,7 +3,7 @@ set -e
 set -x
 echo "🐳 Building Docker images..."
 
-eval $(minikube docker-env)
+eval $(minikube -p minikube docker-env)
 
 docker build -t user ./services/user
 docker build -t ride ./services/ride
