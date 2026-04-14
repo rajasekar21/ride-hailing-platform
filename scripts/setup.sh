@@ -32,4 +32,13 @@ else
   (cd frontend && npm install)
 fi
 
+echo "⚙️ Configuring frontend environment..."
+
+cat <<EOF > frontend/.env
+VITE_USER_BASE=http://localhost:3001
+VITE_API_BASE=http://localhost:3000
+EOF
+
+echo "✅ Frontend .env configured"
+
 echo "✅ Setup complete"

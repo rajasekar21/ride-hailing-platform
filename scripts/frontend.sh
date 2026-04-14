@@ -1,8 +1,9 @@
 #!/bin/bash
 
-if [ -f "frontend/package.json" ]; then
-  cd frontend
-  npm run dev
-else
-  echo "Frontend not available"
-fi
+echo "🌐 Starting frontend..."
+
+cd frontend
+npm run dev > /dev/null 2>&1 &
+cd ..
+
+echo "✅ Frontend running"

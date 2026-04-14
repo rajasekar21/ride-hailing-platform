@@ -9,6 +9,7 @@ echo "☸️ Deploying services..."
 
 kubectl apply -f k8s/
 
-kubectl get pods
+echo "⏳ Waiting for pods to be ready..."
+kubectl wait --for=condition=ready pod --all --timeout=180s
 
-echo "✅ Deployment complete"
+echo "✅ All pods are ready"
