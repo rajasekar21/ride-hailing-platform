@@ -1,11 +1,7 @@
 #!/bin/bash
 set -e
+set -x
 echo "🔧 Installing dependencies..."
-
-IP=$(minikube ip)
-
-echo "VITE_API_BASE=http://$IP:30300" > frontend/.env
-echo "VITE_USER_BASE=http://$IP:30301" >> frontend/.env
 
 # Backend services
 for dir in services/*; do

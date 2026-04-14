@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 echo "🐳 Building Docker images..."
 
 eval $(minikube docker-env)
