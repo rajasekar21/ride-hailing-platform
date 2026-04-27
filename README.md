@@ -178,6 +178,10 @@ minikube ip
 * API (Rides) → `http://<IP>:30000`
 * Auth Service → `http://<IP>:30302`
 
+> If you are using GitHub.dev or a remote editor preview, the frontend now binds to `0.0.0.0` and is available on port `5173`.
+> Use the editor preview URL for port `5173` instead of `3000` for the frontend.
+
+
 ---
 
 # 🧪 API Endpoints
