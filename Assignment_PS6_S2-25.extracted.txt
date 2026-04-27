@@ -1,0 +1,111 @@
+Problem Statement 6 – Ride-Hailing / Fleet Dispatch
+You are required to design and implement a Ride-Hailing Platform based on a provided dataset that includes riders, drivers, trips, payments, and ratings. The system must follow a microservices architecture consisting of at least four independent services, where each service maintains its own dedicated database in accordance with the database-per-service pattern. Sharing database tables or performing cross-database joins is strictly prohibited, ensuring loose coupling, scalability, and maintainability.
+When a service requires data owned by another service (for example, including driver details in payment receipts or notifications), the data must be accessed either by replicating the necessary subset into the local database or by invoking the appropriate service through APIs. This approach helps maintain clear service boundaries while enabling efficient data access.
+The system should include the following core microservices:
+Rider Service: Responsible for managing rider accounts, including registration, profile updates, and account-related operations. It should provide endpoints such as /v1/riders and /v1/riders/{id} for CRUD functionality.
+Driver Service: Handles driver onboarding, vehicle details, active/inactive status, and maintains historical driver activity. Typical endpoints include /v1/drivers and /v1/drivers/{id}.
+Trip Service: Manages the complete lifecycle of trips, including ride requests, driver assignment, trip progress, completion, and cancellations. It maintains trip states such as REQUESTED, ACCEPTED, ONGOING, COMPLETED, and CANCELLED, and exposes endpoints like /v1/trips and /v1/trips/{id}.
+Payment Service: Processes payments for completed trips, tracks payment status, and records all financial transactions. It also links payments to trips and generates receipts, with endpoints such as /v1/payments.
+Additional services may be included as needed, such as a Notification Service for sending ride updates or a Ratings Service for collecting feedback from riders and drivers.
+To enable communication between services, APIs must be carefully designed to allow real-time data exchange without violating the database-per-service principle. For instance, the Payment Service may call the Trip Service to verify trip completion before processing a payment, while the Trip Service may retrieve driver details from the Driver Service during ride assignment.
+Each microservice should be independently deployable, support horizontal scaling, and incorporate robust error-handling mechanisms. Critical operations, particularly payment-related endpoints, should implement idempotency and rate limiting to prevent duplicate transactions and system overload.
+Additionally, the system must include observability features such as structured logging, distributed tracing, and metrics collection (e.g., using Prometheus/OpenMetrics). Logs should include correlation IDs to trace requests across services, enabling effective monitoring and troubleshooting of the entire transaction flow.
+Provided Dataset
+• Riders – 80 riders
+• Drivers – 70 drivers (vehicle details, license plate, active status)
+• Trips – 350 trips (REQUESTED, ACCEPTED, ONGOING, COMPLETED, CANCELLED)
+• Trip_Payments – payment records linked to trips
+• Trip_Ratings – feedback entries (~280 ratings)
+Task 1: Microservices (≥4 Services) (6 Marks)
+1. Rider Service
+Manage rider registration, profiles, and account details.
+Endpoints: /v1/riders, /v1/riders/{id}
+2. Driver Service
+Handle driver CRUD operations, vehicle details, and availability status (is_active).
+Endpoints: /v1/drivers, /v1/drivers/{id}/status
+3. Trip / Dispatch Service
+Manage trip lifecycle including request, driver assignment, and completion.
+Maintain trip states: REQUESTED, ACCEPTED, ONGOING, COMPLETED, CANCELLED.
+Endpoints:
+/v1/trips
+/v1/trips/{id}/accept
+/v1/trips/{id}/complete
+4. Payment Service
+Process trip payments and refunds.
+Ensure idempotent operations for payment processing.
+Endpoints:
+/v1/payments/charge
+/v1/payments/{id}/refund
+5. (Optional) Rating Service
+Capture ratings between riders and drivers for completed trips only.
+Endpoint: /v1/trips/{id}/rating
+Task 2: Database Design and Pattern (1.5 Marks)
+Define service-level data ownership as follows:
+Rider Service
+Owns rider profiles, payment methods, and account preferences.
+Exposes /v1/riders APIs.
+Driver Service
+Manages driver details, vehicle information, activity history, and availability status.
+Exposes /v1/drivers APIs.
+Trip Service
+Owns trip lifecycle data, routing logic, driver assignment, ETA, and cancellations.
+Exposes /v1/trips APIs.
+Payment Service
+Handles payments, receipts, refunds, and reconciliation.
+Exposes /v1/payments APIs.
+Rating & Feedback Service (Optional)
+Stores trip ratings and feedback data.
+Notification Service (Optional)
+Sends push/SMS/in-app notifications and maintains audit logs.
+Matching/Dispatch Service (Optional)
+Performs driver matching based on proximity, scoring, and batching using geospatial indexing or caching (e.g., Redis).
+Task 3: Inter-Service Workflows (Business Logic) (2.5 Marks)
+Trip Lifecycle: Request → Complete → Payment
+Rider sends request to Trip Service /v1/trips with pickup and drop details.
+Trip Service calls Driver Service to assign an available driver.
+Driver accepts the trip → status updated to ACCEPTED.
+Upon trip completion → Trip Service /complete calculates fare:
+fare = distance × rate × surge multiplier
+Trip Service calls Payment Service /charge:
+On SUCCESS → Trip marked COMPLETED, receipt generated
+On FAILURE → Trip marked unpaid, retry allowed (idempotent)
+Rider and driver can submit ratings for the trip.
+Notification Service sends ride summary and payment receipt.
+Rules
+Only drivers with active status can be assigned trips.
+Surge pricing multipliers may be {1.0, 1.2, 1.5}.
+Cancellation after driver acceptance may incur a cancellation fee.
+Payment endpoints must enforce idempotency.
+Ratings are allowed only for completed trips.
+Fare calculation should include base fare and surge multiplier.
+Task 4: Containerization using Docker (2 Marks)
+Create a Dockerfile for each microservice.
+Provide a docker-compose.yml file to run all services and their databases locally.
+Validate service networking and database connectivity.
+Include evidence:
+docker ps output
+Health check endpoints
+Sample API requests
+Task 5: Deployment on Minikube (Local Kubernetes) (2 Marks)
+Create Kubernetes manifests for each service:
+Deployment (with readiness/liveness probes and resource limits)
+Service (ClusterIP and NodePort/Ingress for external access)
+ConfigMap and Secret for configurations
+PersistentVolumeClaims for database storage
+Demonstrate complete workflow within the cluster:
+Trip request → Driver acceptance → Trip completion → Payment processing
+Provide screenshots:
+kubectl get pods
+kubectl get svc
+Logs using kubectl logs
+Successful API calls via curl/Postman through NodePort/Ingress
+Task 6: Monitoring (2 Marks)
+Implement observability for ride-hailing operations:
+Metrics:
+trips_requested_total
+trips_completed_total
+payments_failed_total
+avg_driver_rating
+Logging:
+Structured JSON logs with correlation IDs for request tracing
+Task 7: Documentation (2 Marks)

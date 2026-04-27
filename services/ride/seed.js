@@ -5,7 +5,7 @@ const { Sequelize, DataTypes } = require("sequelize");
 
 const db = new Sequelize({
   dialect: "sqlite",
-  storage: "rides.db"
+  storage: process.env.DB_PATH || "rides.db"
 });
 
 const Trip = db.define("Trip", {
@@ -20,6 +20,7 @@ const Trip = db.define("Trip", {
   base_fare: DataTypes.FLOAT,
   fare_amount: DataTypes.FLOAT,
   trip_status: DataTypes.STRING,
+  payment_status: DataTypes.STRING,
   requested_at: DataTypes.STRING,
   accepted_at: DataTypes.STRING,
   completed_at: DataTypes.STRING,
@@ -30,7 +31,7 @@ async function seed() {
   await db.sync({ force: true });
 
   const results = [];
-  const filePath = path.join(__dirname, "trips.csv");
+  const filePath = process.env.DATASET_FILE || path.join(__dirname, "trips.csv");
 
   fs.createReadStream(filePath)
     .pipe(csv())
@@ -47,6 +48,7 @@ async function seed() {
         base_fare: parseFloat(data.base_fare) || 50.0,
         fare_amount: parseFloat(data.fare_amount) || 0.0,
         trip_status: data.trip_status,
+        payment_status: data.trip_status === "COMPLETED" ? "PAID" : "PENDING",
         requested_at: data.requested_at,
         accepted_at: data.accepted_at || null,
         completed_at: data.completed_at || null,

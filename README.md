@@ -175,6 +175,7 @@ This deploys all services including:
 ```bash
 kubectl get pods
 kubectl get svc
+kubectl wait --for=condition=ready pod --all --timeout=240s
 ```
 
 ---
@@ -192,6 +193,99 @@ minikube ip
 > If you are using GitHub.dev or a remote editor preview, the frontend now binds to `0.0.0.0` and is available on port `5173`.
 > Use the editor preview URL for port `5173` instead of `3000` for the frontend.
 
+---
+
+## ✅ Verified Kubernetes Execution (Windows + Minikube Docker Driver)
+
+The following flow has been executed and validated on this repository.
+
+### 1) Start cluster and deploy
+
+```bash
+minikube start --driver=docker --memory=4096 --cpus=2
+kubectl apply -f k8s/
+kubectl wait --for=condition=ready pod --all --timeout=240s
+kubectl get pods -o wide
+kubectl get svc
+```
+
+### 2) Load local images into Minikube cache
+
+If images are built as `ride-hailing-platform-*`, tag and load:
+
+```bash
+docker tag ride-hailing-platform-user:latest user:latest
+docker tag ride-hailing-platform-driver:latest driver:latest
+docker tag ride-hailing-platform-ride:latest ride:latest
+docker tag ride-hailing-platform-payment:latest payment:latest
+docker tag ride-hailing-platform-notification:latest notification:latest
+docker tag ride-hailing-platform-rating:latest rating:latest
+docker tag ride-hailing-platform-auth:latest auth:latest
+minikube image load user:latest driver:latest ride:latest payment:latest notification:latest rating:latest auth:latest
+```
+
+### 3) Windows note for NodePort access
+
+With Minikube Docker driver on Windows, direct `<minikube-ip>:<nodePort>` access may fail from host shell.
+Use service tunnels:
+
+```bash
+minikube service user --url
+minikube service ride --url
+minikube service driver-nodeport --url
+minikube service payment-nodeport --url
+minikube service rating-nodeport --url
+```
+
+Example validated URLs in one run:
+
+- User: `http://127.0.0.1:57588`
+- Ride: `http://127.0.0.1:57608`
+- Driver: `http://127.0.0.1:51987`
+- Payment: `http://127.0.0.1:57610`
+- Rating: `http://127.0.0.1:57612`
+
+### 4) End-to-end assignment flow (rating as final step)
+
+1. Create rider (`POST /v1/riders`)
+2. Create/activate driver (`POST /v1/drivers`)
+3. Create trip (`POST /v1/trips`)
+4. Accept trip (`POST /v1/trips/{id}/accept`)
+5. Complete trip async (`POST /v1/trips/{id}/complete?mode=async`)
+6. Verify trip payment status becomes `PAID` via ride service
+7. Submit rating (`POST /v1/trips/{id}/rating`) as final business step
+8. Capture metrics from ride/payment/rating services
+
+### 5) Verified sample outcomes
+
+- Trip lifecycle reached `REQUESTED -> ACCEPTED -> COMPLETED`
+- Ride payment status moved `PROCESSING -> PAID`
+- Rating successfully saved with value `5`
+- Notification service consumed `payment.completed` event
+
+### 6) Metrics captured after flow
+
+```json
+{
+  "ride_metrics": {
+    "trips_requested_total": 2,
+    "trips_completed_total": 1,
+    "completed_trips_in_db": 1,
+    "event_publish_failures_total": 0
+  },
+  "payment_metrics": {
+    "payments_failed_total": 0,
+    "payments_total": 1,
+    "refunded_total": 0,
+    "payment_events_consumed_total": 1,
+    "payment_event_consumer_errors_total": 0
+  },
+  "rating_metrics": {
+    "avg_driver_rating": 5,
+    "ratings_total": 1
+  }
+}
+```
 
 ---
 
@@ -219,6 +313,8 @@ minikube ip
 * `GET /v1/trips/{id}`
 * `POST /v1/trips/{id}/accept`
 * `POST /v1/trips/{id}/complete`
+* `POST /v1/trips/{id}/complete?mode=async` (publishes event to RabbitMQ)
+* `POST /v1/trips/{id}/cancel`
 
 ## Payment Service
 
@@ -235,6 +331,14 @@ minikube ip
 ## Notification Service
 
 * `POST /v1/notifications`
+* `GET /metrics`
+
+## Distributed Trace Header
+
+All services accept and propagate:
+
+* `X-Request-ID`
+* `X-Trace-ID`
 
 ## Auth Service
 
@@ -388,16 +492,26 @@ curl -X POST http://<MINIKUBE_IP>:30302/login \
 
 1. Start system (Minikube)
 2. Open dashboard
-3. Create user
-4. Book ride
-5. Observe logs:
+3. Create rider and driver
+4. Book trip
+5. Accept and complete trip (`/complete?mode=async`)
+6. Confirm payment status update from ride service
+7. Submit rating as final step
+8. Observe logs:
 
    ```bash
-   kubectl logs <driver-pod>
+   kubectl logs deployment/ride --since=10m
    kubectl logs <payment-pod>
+   kubectl logs deployment/notification --since=10m
+   kubectl logs deployment/rating --since=10m
    ```
-6. Trigger autoscaling
-7. Show metrics
+9. Show metrics:
+
+   ```bash
+   curl http://<ride-base>/metrics
+   curl http://<payment-base>/metrics
+   curl http://<rating-base>/metrics
+   ```
 
 ---
 

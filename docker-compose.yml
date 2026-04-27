@@ -1,0 +1,140 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  user:
+    build: ./services/user
+    container_name: user
+    environment:
+      - DB_PATH=/data/users.db
+      - DATASET_FILE=/dataset/users.csv
+    command: sh -c "node seed.js && node app.js"
+    volumes:
+      - user_data:/data
+      - ./dataset:/dataset:ro
+    ports:
+      - "3001:3000"
+
+  driver:
+    build: ./services/driver
+    container_name: driver
+    environment:
+      - DB_PATH=/data/drivers.db
+      - DATASET_FILE=/dataset/drivers.csv
+    command: sh -c "node seed.js && node app.js"
+    volumes:
+      - driver_data:/data
+      - ./dataset:/dataset:ro
+    ports:
+      - "3002:3000"
+
+  ride:
+    build: ./services/ride
+    container_name: ride
+    environment:
+      - DB_PATH=/data/rides.db
+      - DATASET_FILE=/dataset/trips.csv
+      - DRIVER_SERVICE_URL=http://driver:3000
+      - PAYMENT_SERVICE_URL=http://payment:3000
+      - NOTIFICATION_SERVICE_URL=http://notification:3000
+      - CANCELLATION_FEE=30
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - EVENTS_EXCHANGE=ride.events
+    command: sh -c "node seed.js && node app.js"
+    depends_on:
+      - rabbitmq
+      - driver
+      - payment
+      - notification
+    volumes:
+      - ride_data:/data
+      - ./dataset:/dataset:ro
+    ports:
+      - "3000:3000"
+
+  payment:
+    build: ./services/payment
+    container_name: payment
+    environment:
+      - DB_PATH=/data/payments.db
+      - DATASET_FILE=/dataset/payments.csv
+      - TRIP_SERVICE_URL=http://ride:3000
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - EVENTS_EXCHANGE=ride.events
+      - PAYMENT_QUEUE=payment.queue
+    command: sh -c "node seed.js && node app.js"
+    depends_on:
+      - rabbitmq
+    volumes:
+      - payment_data:/data
+      - ./dataset:/dataset:ro
+    ports:
+      - "3003:3000"
+
+  rating:
+    build: ./services/rating
+    container_name: rating
+    environment:
+      - DB_PATH=/data/ratings.db
+      - DATASET_FILE=/dataset/ratings.csv
+      - TRIP_SERVICE_URL=http://ride:3000
+    command: sh -c "node seed.js && node app.js"
+    depends_on:
+      - ride
+    volumes:
+      - rating_data:/data
+      - ./dataset:/dataset:ro
+    ports:
+      - "3005:3000"
+
+  notification:
+    build: ./services/notification
+    container_name: notification
+    environment:
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - EVENTS_EXCHANGE=ride.events
+      - NOTIFICATION_QUEUE=notification.queue
+    depends_on:
+      - rabbitmq
+    ports:
+      - "3004:3000"
+
+  auth:
+    build: ./services/auth
+    container_name: auth
+    environment:
+      - JWT_SECRET=ILoveIndia
+    ports:
+      - "3006:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_USER_BASE: http://localhost:3001
+        VITE_API_BASE: http://localhost:3000
+        VITE_DRIVER_BASE: http://localhost:3002
+        VITE_PAYMENT_BASE: http://localhost:3003
+        VITE_RATING_BASE: http://localhost:3005
+    container_name: frontend
+    depends_on:
+      - user
+      - driver
+      - ride
+      - payment
+      - rating
+    ports:
+      - "5173:3000"
+
+volumes:
+  user_data:
+  driver_data:
+  ride_data:
+  payment_data:
+  rating_data:

@@ -16,6 +16,9 @@ spec:
       - name: driver
         image: driver
         imagePullPolicy: Never
+        env:
+        - name: DB_PATH
+          value: /data/drivers.db
         ports:
         - containerPort: 3000
 
@@ -26,6 +29,25 @@ spec:
           limits:
             cpu: "200m"
             memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: driver-storage
+          mountPath: /data
+      volumes:
+      - name: driver-storage
+        persistentVolumeClaim:
+          claimName: driver-pvc
 
 ---
 apiVersion: v1
