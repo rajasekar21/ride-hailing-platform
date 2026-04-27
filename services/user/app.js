@@ -8,7 +8,7 @@ app.use(express.json());
 
 const db = new Sequelize({
   dialect: "sqlite",
-  storage: "users.db"
+  storage: process.env.DB_PATH || "users.db"
 });
 
 const Rider = db.define("Rider", {

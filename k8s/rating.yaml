@@ -16,6 +16,14 @@ spec:
       - name: rating
         image: rating
         imagePullPolicy: Never
+        env:
+        - name: DB_PATH
+          value: /data/ratings.db
+        - name: TRIP_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: platform-config
+              key: TRIP_SERVICE_URL
         ports:
         - containerPort: 3000
         resources:
@@ -25,6 +33,25 @@ spec:
           limits:
             cpu: "200m"
             memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: rating-storage
+          mountPath: /data
+      volumes:
+      - name: rating-storage
+        persistentVolumeClaim:
+          claimName: rating-pvc
 ---
 apiVersion: v1
 kind: Service

@@ -8,7 +8,7 @@ app.use(express.json());
 
 const db = new Sequelize({
   dialect: "sqlite",
-  storage: "drivers.db"
+  storage: process.env.DB_PATH || "drivers.db"
 });
 
 const Driver = db.define("Driver", {

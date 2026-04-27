@@ -5,7 +5,7 @@ const { Sequelize, DataTypes } = require("sequelize");
 
 const db = new Sequelize({
   dialect: "sqlite",
-  storage: "users.db"
+  storage: process.env.DB_PATH || "users.db"
 });
 
 const Rider = db.define("Rider", {
@@ -21,7 +21,7 @@ async function seed() {
   await db.sync({ force: true });
 
   const results = [];
-  const filePath = path.join(__dirname, "users.csv");
+  const filePath = process.env.DATASET_FILE || path.join(__dirname, "users.csv");
 
   fs.createReadStream(filePath)
     .pipe(csv())

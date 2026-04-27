@@ -9,7 +9,7 @@ app.use(express.json());
 
 const db = new Sequelize({
   dialect: "sqlite",
-  storage: "ratings.db"
+  storage: process.env.DB_PATH || "ratings.db"
 });
 
 const Rating = db.define("Rating", {
@@ -40,7 +40,9 @@ app.post("/v1/trips/:id/rating", async (req, res) => {
       return res.status(400).send({ error: "rider_id, driver_id, and numeric rating are required" });
     }
 
-    const tripResponse = await axios.get(`${TRIP_SERVICE_URL}/v1/trips/${tripId}`);
+    const tripResponse = await axios.get(`${TRIP_SERVICE_URL}/v1/trips/${tripId}`, {
+      headers: { "X-Request-ID": req.requestId }
+    });
     const trip = tripResponse.data;
     if (!trip || trip.trip_status !== "COMPLETED") {
       return res.status(400).send({ error: "Rating is allowed only for completed trips" });
@@ -81,6 +83,16 @@ app.get("/v1/ratings/trip/:tripId", async (req, res) => {
 
 app.get("/health", (req, res) => {
   res.send("OK");
+});
+
+app.get("/metrics", async (req, res) => {
+  const ratings = await Rating.findAll({ attributes: ["rating"] });
+  const total = ratings.length;
+  const sum = ratings.reduce((acc, row) => acc + Number(row.rating || 0), 0);
+  res.send({
+    avg_driver_rating: total ? Number((sum / total).toFixed(2)) : 0,
+    ratings_total: total
+  });
 });
 
 app.listen(3000, () => {

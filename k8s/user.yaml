@@ -11,6 +11,9 @@ spec:
       containers:
       - name: user
         image: user
+        env:
+        - name: DB_PATH
+          value: /data/users.db
         resources:
           requests:
             cpu: "100m"
@@ -20,6 +23,25 @@ spec:
             memory: "256Mi"
         imagePullPolicy: Never
         ports: [{containerPort: 3000}]
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: user-storage
+          mountPath: /data
+      volumes:
+      - name: user-storage
+        persistentVolumeClaim:
+          claimName: user-pvc
 ---
 apiVersion: v1
 kind: Service

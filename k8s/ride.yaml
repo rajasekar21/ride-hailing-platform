@@ -12,6 +12,39 @@ spec:
       - name: ride
         image: ride
         imagePullPolicy: Never
+        env:
+        - name: DB_PATH
+          value: /data/rides.db
+        - name: DRIVER_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: platform-config
+              key: DRIVER_SERVICE_URL
+        - name: PAYMENT_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: platform-config
+              key: PAYMENT_SERVICE_URL
+        - name: NOTIFICATION_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: platform-config
+              key: NOTIFICATION_SERVICE_URL
+        - name: CANCELLATION_FEE
+          valueFrom:
+            configMapKeyRef:
+              name: platform-config
+              key: CANCELLATION_FEE
+        - name: RABBITMQ_URL
+          valueFrom:
+            configMapKeyRef:
+              name: platform-config
+              key: RABBITMQ_URL
+        - name: EVENTS_EXCHANGE
+          valueFrom:
+            configMapKeyRef:
+              name: platform-config
+              key: EVENTS_EXCHANGE
         resources:
           requests:
             cpu: "100m"
@@ -20,6 +53,25 @@ spec:
             cpu: "200m"
             memory: "256Mi"
         ports: [{containerPort: 3000}]
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: ride-storage
+          mountPath: /data
+      volumes:
+      - name: ride-storage
+        persistentVolumeClaim:
+          claimName: ride-pvc
 ---
 apiVersion: v1
 kind: Service

@@ -10,7 +10,7 @@ app.use(express.json());
 
 const db = new Sequelize({
   dialect: "sqlite",
-  storage: "rides.db"
+  storage: process.env.DB_PATH || "rides.db"
 });
 
 const Trip = db.define("Trip", {
@@ -36,11 +36,39 @@ db.sync();
 const DRIVER_SERVICE_URL = process.env.DRIVER_SERVICE_URL || "http://driver:3000";
 const PAYMENT_SERVICE_URL = process.env.PAYMENT_SERVICE_URL || "http://payment:3000";
 const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://notification:3000";
+const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
+const EVENTS_EXCHANGE = process.env.EVENTS_EXCHANGE || "ride.events";
+const CANCELLATION_FEE = Number(process.env.CANCELLATION_FEE || 30);
+
+let tripsRequestedTotal = 0;
+let tripsCompletedTotal = 0;
+let eventPublishFailuresTotal = 0;
+let rabbitChannel;
+
+async function getRabbitChannel() {
+  if (rabbitChannel) return rabbitChannel;
+  const connection = await amqp.connect(RABBITMQ_URL);
+  rabbitChannel = await connection.createChannel();
+  await rabbitChannel.assertExchange(EVENTS_EXCHANGE, "topic", { durable: true });
+  return rabbitChannel;
+}
+
+async function publishEvent(routingKey, payload) {
+  try {
+    const channel = await getRabbitChannel();
+    channel.publish(EVENTS_EXCHANGE, routingKey, Buffer.from(JSON.stringify(payload)), { persistent: true });
+  } catch (err) {
+    eventPublishFailuresTotal += 1;
+    console.error(JSON.stringify({ level: "error", event: "publish_failed", routingKey, error: err.message }));
+  }
+}
 
 app.use((req, res, next) => {
   const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
+  const traceId = req.get("X-Trace-ID") || requestId;
   req.requestId = requestId;
-  console.log(JSON.stringify({ requestId, method: req.method, path: req.path, body: req.body }));
+  req.traceId = traceId;
+  console.log(JSON.stringify({ requestId, traceId, method: req.method, path: req.path, body: req.body }));
   next();
 });
 
@@ -67,6 +95,7 @@ app.post("/v1/trips", async (req, res) => {
       trip_status: "REQUESTED",
       requested_at: new Date().toISOString()
     });
+    tripsRequestedTotal += 1;
     res.status(201).send(trip);
   } catch (err) {
     res.status(500).send({ error: "Failed to create trip" });
@@ -96,7 +125,9 @@ app.post("/v1/trips/:id/accept", async (req, res) => {
       return res.status(400).send({ error: "Trip must be in REQUESTED state to accept" });
     }
 
-    const response = await axios.get(`${DRIVER_SERVICE_URL}/v1/drivers?active=true`);
+    const response = await axios.get(`${DRIVER_SERVICE_URL}/v1/drivers?active=true`, {
+      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
+    });
     const availableDrivers = response.data || [];
     if (!availableDrivers.length) {
       return res.status(503).send({ error: "No active drivers available" });
@@ -115,8 +146,9 @@ app.post("/v1/trips/:id/accept", async (req, res) => {
 });
 
 app.post("/v1/trips/:id/complete", async (req, res) => {
+  let trip;
   try {
-    const trip = await Trip.findByPk(req.params.id);
+    trip = await Trip.findByPk(req.params.id);
     if (!trip) {
       return res.status(404).send({ error: "Trip not found" });
     }
@@ -129,11 +161,33 @@ app.post("/v1/trips/:id/complete", async (req, res) => {
     trip.completed_at = new Date().toISOString();
     trip.trip_status = "COMPLETED";
     await trip.save();
+    const idempotencyKey = `trip-${trip.id}`;
+    const asyncMode = req.query.mode === "async";
+
+    if (asyncMode) {
+      trip.payment_status = "PROCESSING";
+      await trip.save();
+      await publishEvent("trip.completed", {
+        event: "trip.completed",
+        trace_id: req.traceId,
+        request_id: req.requestId,
+        trip_id: trip.id,
+        rider_id: trip.rider_id,
+        driver_id: trip.driver_id,
+        amount: fare,
+        idempotency_key: idempotencyKey,
+        occurred_at: new Date().toISOString()
+      });
+      tripsCompletedTotal += 1;
+      return res.status(202).send({ trip, payment: { status: "PROCESSING", mode: "async" } });
+    }
 
     const paymentResponse = await axios.post(`${PAYMENT_SERVICE_URL}/v1/payments/charge`, {
       trip_id: trip.id,
       amount: fare,
-      idempotency_key: `trip-${trip.id}`
+      idempotency_key: idempotencyKey
+    }, {
+      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
     });
 
     trip.payment_status = paymentResponse.data.status || "PAID";
@@ -146,10 +200,13 @@ app.post("/v1/trips/:id/complete", async (req, res) => {
       amount: trip.fare_amount,
       status: trip.trip_status,
       timestamp: new Date().toISOString()
+    }, {
+      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
     }).catch((notificationErr) => {
       console.error("Notification failed", notificationErr.message);
     });
 
+    tripsCompletedTotal += 1;
     res.send({ trip, payment: paymentResponse.data });
   } catch (err) {
     if (trip) {
@@ -161,6 +218,36 @@ app.post("/v1/trips/:id/complete", async (req, res) => {
     } else {
       res.status(502).send({ error: "Payment processing failed", details: err.message });
     }
+  }
+});
+
+app.post("/v1/trips/:id/cancel", async (req, res) => {
+  try {
+    const trip = await Trip.findByPk(req.params.id);
+    if (!trip) {
+      return res.status(404).send({ error: "Trip not found" });
+    }
+    if (!["REQUESTED", "ACCEPTED", "ONGOING"].includes(trip.trip_status)) {
+      return res.status(400).send({ error: "Only in-progress trips can be cancelled" });
+    }
+    const cancellationFee = ["ACCEPTED", "ONGOING"].includes(trip.trip_status) ? CANCELLATION_FEE : 0;
+    trip.trip_status = "CANCELLED";
+    trip.cancelled_at = new Date().toISOString();
+    await trip.save();
+    await publishEvent("trip.cancelled", {
+      event: "trip.cancelled",
+      trace_id: req.traceId,
+      request_id: req.requestId,
+      trip_id: trip.id,
+      rider_id: trip.rider_id,
+      driver_id: trip.driver_id,
+      cancellation_fee: cancellationFee,
+      occurred_at: trip.cancelled_at
+    });
+
+    res.send({ trip, cancellation_fee: cancellationFee });
+  } catch (err) {
+    res.status(500).send({ error: "Failed to cancel trip", details: err.message });
   }
 });
 
@@ -186,6 +273,30 @@ app.post("/rides", async (req, res) => {
 
 app.get("/health", (req, res) => {
   res.send("OK");
+});
+
+app.patch("/v1/trips/:id/payment-status", async (req, res) => {
+  const { status } = req.body;
+  if (!status) {
+    return res.status(400).send({ error: "status is required" });
+  }
+  const trip = await Trip.findByPk(req.params.id);
+  if (!trip) {
+    return res.status(404).send({ error: "Trip not found" });
+  }
+  trip.payment_status = status;
+  await trip.save();
+  res.send(trip);
+});
+
+app.get("/metrics", async (req, res) => {
+  const completedRatings = await Trip.count({ where: { trip_status: "COMPLETED" } });
+  res.send({
+    trips_requested_total: tripsRequestedTotal,
+    trips_completed_total: tripsCompletedTotal,
+    completed_trips_in_db: completedRatings,
+    event_publish_failures_total: eventPublishFailuresTotal
+  });
 });
 
 app.listen(3000, () => {
