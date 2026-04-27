@@ -182,7 +182,8 @@ minikube ip
 
 ## Auth Service
 
-* `POST /login`
+* `POST /login` - Authenticate user and return JWT token
+* `GET /health` - Health check endpoint
 
 ---
 
@@ -240,6 +241,24 @@ Example:
   * Admin
   * Driver
   * Rider
+
+---
+
+# 🔧 Environment Variables
+
+Configure these environment variables for deployment:
+
+| Service | Variable | Default | Description |
+| --- | --- | --- | --- |
+| Auth | `JWT_SECRET` | `your-secret-key-change-in-production` | Secret key for signing JWT tokens. **Must be set in production** |
+| Frontend | `VITE_USER_BASE` | (required) | Base URL for User Service API |
+| Frontend | `VITE_API_BASE` | (required) | Base URL for Ride Service API |
+
+Example `.env` for Docker/K8s:
+
+```bash
+JWT_SECRET=your-secure-production-key-here
+```
 
 ---
 

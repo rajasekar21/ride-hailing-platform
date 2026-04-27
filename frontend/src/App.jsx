@@ -3,12 +3,13 @@ import { getUsers, createRide } from "./api";
 
 function App() {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getUsers().then((res) => setUsers(res.data));
+    getUsers().then((res) => setUsers(res.data)).finally(() => setLoading(false));
   }, []);
 
-  if (!users.length) return <p>Loading users...</p>;
+  if (loading) return <p>Loading users...</p>;
   return (
     <div>
       <h1>🚀 Ride Dashboard</h1>
