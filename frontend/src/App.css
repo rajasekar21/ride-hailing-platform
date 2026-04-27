@@ -63,6 +63,8 @@ select {
   color: #0f172a;
   margin: 0 0 14px;
   font-weight: 500;
+  line-height: 1.45;
+  word-break: break-word;
 }
 
 .warning-panel {
@@ -119,10 +121,28 @@ ul {
 
 h1 {
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1.15;
 }
 
 h2,
 h3 {
   margin-top: 0;
+}
+
+label {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 14px;
+  }
 }

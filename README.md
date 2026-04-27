@@ -540,6 +540,33 @@ kubectl describe pod <pod-name>
 kubectl logs <pod-name>
 ```
 
+## Frontend overlap or warning panel issues
+
+- If heading/subtitle overlap appears, pull the latest frontend updates and rebuild the frontend image/container.
+- The dashboard now auto-refreshes every 10s and clears transient startup warnings once services recover.
+
+## Payment metrics shows `Network Error` in dashboard
+
+This usually means the payment service is not reachable from frontend.
+
+Quick checks:
+
+```bash
+curl http://localhost:3003/health
+curl http://localhost:3003/metrics
+docker compose ps
+docker compose logs payment --tail 120
+```
+
+If payment container fails with `Cannot find module 'csv-parser'`, rebuild payment:
+
+```bash
+cd services/payment
+npm install csv-parser
+cd ../..
+docker compose up -d --build payment
+```
+
 ## Restart cluster
 
 ```bash

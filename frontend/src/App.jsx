@@ -44,8 +44,11 @@ function App() {
 
     requests.forEach((result, idx) => {
       if (result.status === "rejected") {
-        const reason = result.reason?.response?.data?.error || result.reason?.message || "request failed";
-        nextWarnings.push(`${requestLabels[idx]}: ${reason}`);
+        const reasonRaw = result.reason?.response?.data?.error || result.reason?.message || "request failed";
+        const reason = String(reasonRaw).replace(/\s+/g, " ").trim();
+        if (reason) {
+          nextWarnings.push(`${requestLabels[idx]}: ${reason}`);
+        }
       }
     });
 
@@ -69,7 +72,13 @@ function App() {
     const timer = setTimeout(() => {
       loadDashboard();
     }, 0);
-    return () => clearTimeout(timer);
+    const interval = setInterval(() => {
+      loadDashboard();
+    }, 10000);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, []);
 
   const onAction = async (actionFn, successMessage) => {
