@@ -20,10 +20,19 @@ const withHeaders = () => {
 };
 
 export const getUsers = () => axios.get(`${USER_BASE}/v1/riders`);
+export const getUserById = (id) => axios.get(`${USER_BASE}/v1/riders/${id}`);
+export const createUser = (payload) => axios.post(`${USER_BASE}/v1/riders`, payload, withHeaders());
+export const updateUser = (id, payload) => axios.put(`${USER_BASE}/v1/riders/${id}`, payload, withHeaders());
 export const getDrivers = () => axios.get(`${DRIVER_BASE}/v1/drivers?active=true`);
+export const getAllDrivers = () => axios.get(`${DRIVER_BASE}/v1/drivers`);
+export const createDriver = (payload) => axios.post(`${DRIVER_BASE}/v1/drivers`, payload, withHeaders());
+export const updateDriverStatus = (id, is_active) =>
+  axios.patch(`${DRIVER_BASE}/v1/drivers/${id}/status`, { is_active }, withHeaders());
 export const getTrips = () => axios.get(`${RIDE_BASE}/v1/trips`);
 export const getTripById = (tripId) => axios.get(`${RIDE_BASE}/v1/trips/${tripId}`);
 export const getPaymentById = (paymentId) => axios.get(`${PAYMENT_BASE}/v1/payments/${paymentId}`);
+export const chargePayment = (payload) => axios.post(`${PAYMENT_BASE}/v1/payments/charge`, payload, withHeaders());
+export const refundPayment = (paymentId) => axios.post(`${PAYMENT_BASE}/v1/payments/${paymentId}/refund`, {}, withHeaders());
 export const getRideMetrics = () => axios.get(`${RIDE_BASE}/metrics`);
 export const getPaymentMetrics = () => axios.get(`${PAYMENT_BASE}/metrics`);
 export const getRatingMetrics = () => axios.get(`${RATING_BASE}/metrics`);
