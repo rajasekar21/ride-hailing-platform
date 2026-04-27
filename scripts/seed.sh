@@ -11,6 +11,14 @@ else
   echo "⚠️ user seed.js not found, skipping..."
 fi
 
+# DRIVER SERVICE (optional)
+if [ -f "services/driver/seed.js" ]; then
+  echo "Seeding driver service..."
+  (cd services/driver && node seed.js)
+else
+  echo "⚠️ driver seed.js not found, skipping..."
+fi
+
 # RIDE SERVICE (optional)
 if [ -f "services/ride/seed.js" ]; then
   echo "Seeding ride service..."
