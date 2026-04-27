@@ -146,6 +146,17 @@ docker build -t frontend ./frontend
 kubectl apply -f k8s/
 ```
 
+This deploys all services including:
+- **auth.yaml** — Auth service with JWT_SECRET Kubernetes Secret
+- **user.yaml** — User service
+- **ride.yaml** — Ride service
+- **driver.yaml** — Driver service
+- **payment.yaml** — Payment service
+- **notification.yaml** — Notification service
+- **rabbitmq.yaml** — Message broker
+
+**Note:** The Auth service deployment automatically configures the JWT_SECRET from the Kubernetes Secret defined in `k8s/auth.yaml`.
+
 ---
 
 ## 📊 Step 4: Verify Deployment
@@ -164,7 +175,8 @@ minikube ip
 ```
 
 * Frontend → `http://<IP>:30010`
-* API → `http://<IP>:30000`
+* API (Rides) → `http://<IP>:30000`
+* Auth Service → `http://<IP>:30302`
 
 ---
 
@@ -258,6 +270,62 @@ Example `.env` for Docker/K8s:
 
 ```bash
 JWT_SECRET=your-secure-production-key-here
+```
+
+---
+
+## Kubernetes Authentication Setup
+
+The Auth Service requires a Kubernetes Secret to store the `JWT_SECRET`. This is configured in `k8s/auth.yaml`.
+
+### Deploying Auth Service with JWT_SECRET
+
+**1. Apply the auth service manifest:**
+
+```bash
+kubectl apply -f k8s/auth.yaml
+```
+
+This creates:
+- **Deployment** — Auth service pod
+- **Service** — NodePort on port 30302
+- **Secret** — Stores JWT_SECRET safely
+
+**2. Verify the deployment:**
+
+```bash
+kubectl get deployment auth
+kubectl get svc auth
+kubectl get secret auth-secret
+```
+
+**3. Change JWT_SECRET (if needed):**
+
+Edit the secret directly:
+```bash
+kubectl edit secret auth-secret
+```
+
+Or create a new one:
+```bash
+kubectl create secret generic auth-secret \
+  --from-literal=jwt-secret="your-new-secret-key" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Restart the auth service pod to use the new secret
+kubectl rollout restart deployment/auth
+```
+
+**4. Access the Auth Service:**
+
+```bash
+# Get Minikube IP
+minikube ip
+
+# Login endpoint
+curl -X POST http://<MINIKUBE_IP>:30302/login \
+  -H "Content-Type: application/json" \
+  -d '{"u":"username"}'
 ```
 
 ---
