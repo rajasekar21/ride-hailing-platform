@@ -35,6 +35,7 @@ db.sync();
 
 const DRIVER_SERVICE_URL = process.env.DRIVER_SERVICE_URL || "http://driver:3000";
 const PAYMENT_SERVICE_URL = process.env.PAYMENT_SERVICE_URL || "http://payment:3000";
+const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://notification:3000";
 
 app.use((req, res, next) => {
   const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
@@ -137,6 +138,17 @@ app.post("/v1/trips/:id/complete", async (req, res) => {
 
     trip.payment_status = paymentResponse.data.status || "PAID";
     await trip.save();
+
+    await axios.post(`${NOTIFICATION_SERVICE_URL}/v1/notifications`, {
+      trip_id: trip.id,
+      rider_id: trip.rider_id,
+      driver_id: trip.driver_id,
+      amount: trip.fare_amount,
+      status: trip.trip_status,
+      timestamp: new Date().toISOString()
+    }).catch((notificationErr) => {
+      console.error("Notification failed", notificationErr.message);
+    });
 
     res.send({ trip, payment: paymentResponse.data });
   } catch (err) {

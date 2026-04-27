@@ -31,4 +31,10 @@ if [ -f "services/payment/seed.js" ]; then
   (cd services/payment && node seed.js)
 fi
 
+# RATING SERVICE (optional)
+if [ -f "services/rating/seed.js" ]; then
+  echo "Seeding rating service..."
+  (cd services/rating && node seed.js)
+fi
+
 echo "✅ Data seeding complete"
