@@ -31,6 +31,17 @@ User → Ride → Driver → Payment → Notification → Rating
 * **Notification Service** → Event notifications
 * **Auth Service** → JWT-based authentication
 
+## 🔗 Standalone Service Repositories
+
+* **Platform Orchestration Repo**: [ride-hailing-platform](https://github.com/rajasekar21/ride-hailing-platform)
+* **User Service Repo**: [ride-hailing-user-service](https://github.com/rajasekar21/ride-hailing-user-service)
+* **Driver Service Repo**: [ride-hailing-driver-service](https://github.com/rajasekar21/ride-hailing-driver-service)
+* **Trip Service Repo**: [ride-hailing-trip-service](https://github.com/rajasekar21/ride-hailing-trip-service)
+* **Payment Service Repo**: [ride-hailing-payment-service](https://github.com/rajasekar21/ride-hailing-payment-service)
+* **Rating Service Repo**: [ride-hailing-rating-service](https://github.com/rajasekar21/ride-hailing-rating-service)
+* **Notification Service Repo**: [ride-hailing-notification-service](https://github.com/rajasekar21/ride-hailing-notification-service)
+* **Auth Service Repo**: [ride-hailing-auth-service](https://github.com/rajasekar21/ride-hailing-auth-service)
+
 ---
 
 ## 🔹 Infrastructure
