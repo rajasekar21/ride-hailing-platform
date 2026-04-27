@@ -5,14 +5,17 @@ const { Sequelize, DataTypes } = require("sequelize");
 
 const db = new Sequelize({
   dialect: "sqlite",
-  storage: "users.db"
+  storage: "drivers.db"
 });
 
-const Rider = db.define("Rider", {
+const Driver = db.define("Driver", {
   id: { type: DataTypes.INTEGER, primaryKey: true },
   name: DataTypes.STRING,
-  email: DataTypes.STRING,
   phone: DataTypes.STRING,
+  email: DataTypes.STRING,
+  vehicle_type: DataTypes.STRING,
+  vehicle_plate: DataTypes.STRING,
+  is_active: DataTypes.BOOLEAN,
   city: DataTypes.STRING,
   created_at: DataTypes.STRING
 });
@@ -21,23 +24,26 @@ async function seed() {
   await db.sync({ force: true });
 
   const results = [];
-  const filePath = path.join(__dirname, "users.csv");
+  const filePath = path.join(__dirname, "drivers.csv");
 
   fs.createReadStream(filePath)
     .pipe(csv())
     .on("data", (data) => {
       results.push({
-        id: parseInt(data.rider_id, 10),
+        id: parseInt(data.driver_id, 10),
         name: data.name,
-        email: data.email,
         phone: data.phone,
+        email: data.email,
+        vehicle_type: data.vehicle_type,
+        vehicle_plate: data.vehicle_plate,
+        is_active: data.is_active.toLowerCase() === "true",
         city: data.city,
         created_at: data.created_at
       });
     })
     .on("end", async () => {
-      await Rider.bulkCreate(results, { ignoreDuplicates: true });
-      console.log(`✅ Seeded ${results.length} riders`);
+      await Driver.bulkCreate(results, { ignoreDuplicates: true });
+      console.log(`✅ Seeded ${results.length} drivers`);
     });
 }
 

@@ -75,11 +75,17 @@ dataset/
 
 ## ⚙️ Seeding Data
 
-Each service loads data into SQLite using:
+Services load data into SQLite with their seed scripts.
 
 ```bash
-node seed.js
+./scripts/seed.sh
 ```
+
+This includes:
+- `services/user/seed.js` → riders
+- `services/driver/seed.js` → drivers
+- `services/ride/seed.js` → trips
+- `services/payment/seed.js` → payments
 
 ---
 
@@ -188,13 +194,32 @@ minikube ip
 
 ## User Service
 
-* `GET /users`
-* `POST /users`
+* `GET /v1/riders`
+* `GET /v1/riders/{id}`
+* `POST /v1/riders`
+* `PUT /v1/riders/{id}`
+* `DELETE /v1/riders/{id}`
 
-## Ride Service
+## Driver Service
 
-* `POST /rides`
-* `GET /rides`
+* `GET /v1/drivers`
+* `GET /v1/drivers/{id}`
+* `POST /v1/drivers`
+* `PATCH /v1/drivers/{id}/status`
+
+## Trip Service
+
+* `POST /v1/trips`
+* `GET /v1/trips`
+* `GET /v1/trips/{id}`
+* `POST /v1/trips/{id}/accept`
+* `POST /v1/trips/{id}/complete`
+
+## Payment Service
+
+* `POST /v1/payments/charge`
+* `GET /v1/payments/{id}`
+* `POST /v1/payments/{id}/refund`
 
 ## Auth Service
 
