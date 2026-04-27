@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: auth}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: auth}}
+  template:
+    metadata: {labels: {app: auth}}
+    spec:
+      containers:
+      - name: auth
+        image: auth
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        imagePullPolicy: Never
+        ports: [{containerPort: 3000}]
+        env:
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: jwt-secret
+---
+apiVersion: v1
+kind: Service
+metadata: {name: auth}
+spec:
+  type: NodePort
+  selector: {app: auth}
+  ports: [{port: 3000, nodePort: 30302}]
+---
+apiVersion: v1
+kind: Secret
+metadata: {name: auth-secret}
+type: Opaque
+stringData:
+  jwt-secret: "ILoveIndia"
