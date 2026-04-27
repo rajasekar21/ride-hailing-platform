@@ -10,6 +10,7 @@ docker build -t ride ./services/ride
 docker build -t driver ./services/driver
 docker build -t payment ./services/payment
 docker build -t notification ./services/notification
+docker build -t rating ./services/rating
 docker build -t auth ./services/auth
 
 # ✅ FRONTEND BUILD SAFE CHECK

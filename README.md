@@ -16,7 +16,7 @@ This system follows a **microservices architecture** with:
 
 🔄 Flow
 
-User → Ride → Driver → Payment → Notification
+User → Ride → Driver → Payment → Notification → Rating
 
 
 # 🧩 System Components
@@ -27,6 +27,7 @@ User → Ride → Driver → Payment → Notification
 * **Driver Service** → Handles driver allocation
 * **Ride Service** → Ride lifecycle management
 * **Payment Service** → Payment processing
+* **Rating Service** → Post-trip ratings
 * **Notification Service** → Event notifications
 * **Auth Service** → JWT-based authentication
 
@@ -71,6 +72,7 @@ dataset/
 ├── drivers.csv
 ├── rides.csv
 ├── payments.csv
+├── ratings.csv
 ```
 
 ## ⚙️ Seeding Data
@@ -86,6 +88,7 @@ This includes:
 - `services/driver/seed.js` → drivers
 - `services/ride/seed.js` → trips
 - `services/payment/seed.js` → payments
+- `services/rating/seed.js` → ratings
 
 ---
 
@@ -140,6 +143,7 @@ docker build -t ride ./services/ride
 docker build -t driver ./services/driver
 docker build -t payment ./services/payment
 docker build -t notification ./services/notification
+docker build -t rating ./services/rating
 docker build -t auth ./services/auth
 docker build -t frontend ./frontend
 ```
@@ -159,6 +163,7 @@ This deploys all services including:
 - **driver.yaml** — Driver service
 - **payment.yaml** — Payment service
 - **notification.yaml** — Notification service
+- **rating.yaml** — Rating service
 - **rabbitmq.yaml** — Message broker
 
 **Note:** The Auth service deployment automatically configures the JWT_SECRET from the Kubernetes Secret defined in `k8s/auth.yaml`.
@@ -220,6 +225,16 @@ minikube ip
 * `POST /v1/payments/charge`
 * `GET /v1/payments/{id}`
 * `POST /v1/payments/{id}/refund`
+
+## Rating Service
+
+* `POST /v1/trips/{id}/rating`
+* `GET /v1/ratings`
+* `GET /v1/ratings/trip/{tripId}`
+
+## Notification Service
+
+* `POST /v1/notifications`
 
 ## Auth Service
 
