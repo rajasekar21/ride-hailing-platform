@@ -51,6 +51,11 @@ app.post("/rides", async (req, res) => {
   res.send(ride);
 });
 
+app.get("/rides", async (req, res) => {
+  const rides = await R.findAll();
+  res.send(rides);
+});
+
 // Health check
 app.get("/health", (req, res) => {
   res.send("OK");
