@@ -51,6 +51,11 @@ User → Ride → Driver → Payment → Notification → Rating
 * **Database** → SQLite (per service)
 * **API Gateway** → Nginx (optional)
 
+SQLite deployment note:
+
+- Each SQLite-backed microservice runs as single replica in Kubernetes manifests to avoid DB-file multi-writer conflicts.
+- This is a deliberate assignment trade-off; for production multi-replica writes, a networked DB engine (PostgreSQL/MySQL) would be preferred.
+
 ---
 
 ## 🔹 Frontend
@@ -329,6 +334,8 @@ To address submission feedback gaps, a dedicated docs pack is now added:
 Store all service and evidence screenshots under:
 
 - `docs/screenshots/`
+
+Reviewer note: plain-text ER entity/relationship summary is included in `docs/architecture/ER_DATA_MODEL.md` (not diagram-only).
 
 ---
 
@@ -811,6 +818,7 @@ What to confirm in code:
 ### Rule 3: Payment idempotency + rate limiting (Payment Service)
 
 Source file: `services/payment/index.js`
+Readable source excerpt artifact: `docs/evidence/PAYMENT_SOURCE_VERIFICATION.md`
 
 Verifier commands:
 
