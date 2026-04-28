@@ -323,10 +323,34 @@ To address submission feedback gaps, a dedicated docs pack is now added:
 - `docs/architecture/ER_DIAGRAM.md` (Mermaid ER diagram source)
 - `docs/evidence/DEPLOYMENT_EVIDENCE.md` (docker/k8s/api/metrics evidence checklist)
 - `docs/screenshots/README.md` (service/evidence screenshot naming checklist)
+- `docs/api/openapi.json` (auto-generated OpenAPI spec from service route code)
+- `.github/workflows/openapi-verify.yml` (CI check that verifies the spec is regenerated from code)
 
 Store all service and evidence screenshots under:
 
 - `docs/screenshots/`
+
+---
+
+## OpenAPI/Swagger (Code-Generated Proof)
+
+This repository includes an auto-generated OpenAPI spec created from service route code.
+
+- Generator script: `docs/api/generate-openapi.js`
+- NPM command: `cd docs/api && npm run generate:openapi`
+- Generated spec file: `docs/api/openapi.json`
+- CI verification: `.github/workflows/openapi-verify.yml` (fails if regenerated spec differs)
+
+Quick verifier commands:
+
+```bash
+cd docs/api
+npm ci
+npm run generate:openapi
+git diff -- docs/api/openapi.json
+```
+
+If `git diff` is empty, the committed spec is fully in sync with route code.
 
 ---
 
