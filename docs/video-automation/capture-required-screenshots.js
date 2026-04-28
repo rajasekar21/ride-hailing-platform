@@ -39,11 +39,20 @@ async function screenshotText(page, filename, title, commandOrNote, content) {
 <head>
   <meta charset="utf-8" />
   <style>
-    body { margin:0; background:#0f172a; color:#e2e8f0; font-family:Consolas, monospace; }
-    .wrap { padding:24px; }
-    .title { font-size:20px; font-weight:700; margin-bottom:6px; }
-    .meta { color:#94a3b8; margin-bottom:14px; }
-    pre { white-space:pre-wrap; word-break:break-word; line-height:1.35; background:#111827; border:1px solid #1f2937; border-radius:8px; padding:16px; }
+    body { margin:0; background:#0f172a; color:#e2e8f0; font-family:Consolas, "Courier New", monospace; }
+    .wrap { padding:28px; }
+    .title { font-size:28px; font-weight:700; margin-bottom:8px; }
+    .meta { color:#94a3b8; margin-bottom:16px; font-size:20px; }
+    pre {
+      white-space:pre-wrap;
+      word-break:break-word;
+      line-height:1.55;
+      font-size:22px;
+      background:#111827;
+      border:1px solid #1f2937;
+      border-radius:10px;
+      padding:22px;
+    }
   </style>
 </head>
 <body>
@@ -54,7 +63,7 @@ async function screenshotText(page, filename, title, commandOrNote, content) {
   </div>
 </body>
 </html>`;
-  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.setViewportSize({ width: 1920, height: 1280 });
   await page.setContent(html, { waitUntil: "domcontentloaded" });
   await page.screenshot({ path: path.join(SHOTS_DIR, filename), fullPage: true });
 }
@@ -116,6 +125,17 @@ async function main() {
 
     const svc = runCommand("kubectl get svc");
     await screenshotText(page, "evidence-kubectl-get-svc.png", "Kubernetes Services", "kubectl get svc", svc.output);
+
+    const logs =
+      runCommand("kubectl logs deployment/notification --since=10m");
+    const logsOutput = logs.ok ? logs.output : runCommand("docker logs notification --tail 120").output;
+    await screenshotText(
+      page,
+      "evidence-logs-notification-json.png",
+      "Structured Logs (Notification Service)",
+      logs.ok ? "kubectl logs deployment/notification --since=10m" : "docker logs notification --tail 120",
+      logsOutput
+    );
 
     // 3) API flow evidence screenshots (best-effort)
     const base = {

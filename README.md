@@ -354,6 +354,34 @@ If `git diff` is empty, the committed spec is fully in sync with route code.
 
 ---
 
+## Prometheus/Grafana Scrape Config (Proof)
+
+Prometheus/Grafana monitoring is wired through checked-in config:
+
+- Prometheus scrape config file: `monitoring/prometheus.yml`
+- Docker Compose mounts this config into Prometheus: `docker-compose.yml`
+- Grafana runs as `grafana` service and uses Prometheus as datasource target.
+
+Current scrape jobs in `monitoring/prometheus.yml` include:
+
+- `user-service`
+- `driver-service`
+- `ride-service`
+- `payment-service`
+- `rating-service`
+- `notification-service`
+- `auth-service`
+
+Verification commands:
+
+```bash
+docker compose up -d prometheus grafana
+curl http://localhost:9090/api/v1/targets
+curl http://localhost:9090/api/v1/status/config
+```
+
+---
+
 ## Evidence
 
 Capture these screenshots and paste outputs into your final PDF/report.

@@ -27,12 +27,14 @@ Add screenshots in this folder using the naming convention below.
 - `evidence-metrics-ride.png`
 - `evidence-metrics-payment.png`
 - `evidence-metrics-rating.png`
+- `evidence-logs-notification-json.png` (structured JSON log readability proof)
 
 ## Notes
 
 - Keep terminal text readable (minimum 125% zoom if needed).
 - Include timestamp in terminal for evidence screenshots when possible.
 - Use PNG format for clarity.
+- Prefer readable command screenshots: terminal-equivalent captures should use large font (>=20px).
 
 ## Re-record Workflow Video (Playwright)
 
