@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 import {
   acceptRide,
   cancelRide,
@@ -44,6 +45,8 @@ function App() {
   const [warnings, setWarnings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [demoRunning, setDemoRunning] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const [liveLocation, setLiveLocation] = useState({});
 
   const [riderForm, setRiderForm] = useState({ name: "", email: "", phone: "", city: "Bengaluru" });
   const [riderLookupId, setRiderLookupId] = useState("");
@@ -153,6 +156,17 @@ function App() {
       clearTimeout(timer);
       clearInterval(interval);
     };
+  }, []);
+
+  useEffect(() => {
+    const newSocket = io('http://localhost:3000');
+    setSocket(newSocket);
+
+    newSocket.on('location-update', (data) => {
+      setLiveLocation(prev => ({ ...prev, [data.tripId]: data.location }));
+    });
+
+    return () => newSocket.close();
   }, []);
 
   const onAction = async (actionFn, successMessage) => {
@@ -275,7 +289,7 @@ function App() {
           <h2>Demo Journey</h2>
           <span className="badge required">Required</span>
         </div>
-        <p>1) Create rider and driver -> 2) Create trip -> 3) Accept and complete trip -> 4) Charge/refund payment -> 5) Add rating.</p>
+        <p>1) Create rider and driver → 2) Create trip → 3) Accept and complete trip → 4) Charge/refund payment → 5) Add rating.</p>
       </section>
       <section className="grid">
         <div className="card">
@@ -449,6 +463,14 @@ function App() {
           <button disabled={!selectedTripId} onClick={() => onAction(() => acceptRide(selectedTripId), "Trip accepted.")}>Accept Trip</button>
           <button disabled={!selectedTripId} onClick={() => onAction(() => completeRide(selectedTripId), "Trip completed.")}>Complete Trip</button>
           <button disabled={!selectedTripId} onClick={() => onAction(() => cancelRide(selectedTripId), "Trip cancelled.")}>Cancel Trip</button>
+        </div>
+        <div className="live-tracking">
+          <h3>Live Tracking</h3>
+          {selectedTripId && liveLocation[selectedTripId] ? (
+            <p>Current Location: {JSON.stringify(liveLocation[selectedTripId])}</p>
+          ) : (
+            <p>No live location available</p>
+          )}
         </div>
       </section>
       )}

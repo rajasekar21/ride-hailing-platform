@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user:3000']
+
+  - job_name: 'driver-service'
+    static_configs:
+      - targets: ['driver:3000']
+
+  - job_name: 'ride-service'
+    static_configs:
+      - targets: ['ride:3000']
+
+  - job_name: 'payment-service'
+    static_configs:
+      - targets: ['payment:3000']
+
+  - job_name: 'rating-service'
+    static_configs:
+      - targets: ['rating:3000']
+
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification:3000']
+
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth:3000']

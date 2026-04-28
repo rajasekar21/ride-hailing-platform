@@ -3,8 +3,18 @@ const cors = require("cors");
 const amqp = require("amqplib");
 const axios = require("axios");
 const { Sequelize, DataTypes } = require("sequelize");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 app.use(cors());
 app.use(express.json());
 
@@ -306,6 +316,25 @@ app.get("/metrics", async (req, res) => {
   });
 });
 
-app.listen(3000, () => {
+// WebSocket for live tracking
+io.on('connection', (socket) => {
+  console.log('Client connected for live tracking');
+
+  socket.on('join-trip', (tripId) => {
+    socket.join(`trip-${tripId}`);
+    console.log(`Client joined trip ${tripId}`);
+  });
+
+  socket.on('update-location', (data) => {
+    // Broadcast location update to clients tracking this trip
+    io.to(`trip-${data.tripId}`).emit('location-update', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
+
+server.listen(3000, () => {
   console.log("Ride service running on port 3000");
 });
