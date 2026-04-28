@@ -1,0 +1,382 @@
+{
+  "info": {
+    "_postman_id": "f2eb73a6-5b63-4c6c-9c76-46f65995d2c6",
+    "name": "Ride Hailing Platform - Evaluation Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Evaluation collection for required ride-hailing microservice endpoints. Set {{BASE_URL}} to the service host:port before running each request group (for example user service, driver service, ride service, payment service)."
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "riderId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "driverId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "tripId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "REPLACE_WITH_BEARER_TOKEN",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Rider - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Create rider via POST /v1/riders.\n\nExample body:\n{\n  \"name\": \"Alice Rider\",\n  \"email\": \"alice.rider@example.com\",\n  \"phone\": \"9000000001\",\n  \"city\": \"Bangalore\",\n  \"password\": \"alice@123\",\n  \"role\": \"rider\"\n}\n\nExpected response shape (201):\n{\n  \"id\": 101,\n  \"name\": \"Alice Rider\",\n  \"email\": \"alice.rider@example.com\",\n  \"phone\": \"9000000001\",\n  \"city\": \"Bangalore\",\n  \"role\": \"rider\",\n  \"created_at\": \"...\"\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/riders",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "riders"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Alice Rider\",\n  \"email\": \"alice.rider@example.com\",\n  \"phone\": \"9000000001\",\n  \"city\": \"Bangalore\",\n  \"password\": \"alice@123\",\n  \"role\": \"rider\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Rider - Get By ID",
+      "request": {
+        "method": "GET",
+        "description": "Fetch rider by id via GET /v1/riders/:id.\n\nExpected response shape (200):\n{\n  \"id\": 101,\n  \"name\": \"Alice Rider\",\n  \"email\": \"alice.rider@example.com\",\n  \"phone\": \"9000000001\",\n  \"city\": \"Bangalore\"\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/riders/{{riderId}}",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "riders",
+            "{{riderId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Driver - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Create driver via POST /v1/drivers.\n\nExample body:\n{\n  \"id\": 2001,\n  \"name\": \"Bob Driver\",\n  \"phone\": \"9111111111\",\n  \"email\": \"bob.driver@example.com\",\n  \"vehicle_type\": \"Sedan\",\n  \"vehicle_plate\": \"KA01AB1234\",\n  \"is_active\": true,\n  \"city\": \"Bangalore\",\n  \"password\": \"bob@123\",\n  \"role\": \"driver\"\n}\n\nExpected response shape (201):\n{\n  \"id\": 2001,\n  \"name\": \"Bob Driver\",\n  \"is_active\": true,\n  \"vehicle_type\": \"Sedan\",\n  \"vehicle_plate\": \"KA01AB1234\"\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/drivers",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "drivers"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": 2001,\n  \"name\": \"Bob Driver\",\n  \"phone\": \"9111111111\",\n  \"email\": \"bob.driver@example.com\",\n  \"vehicle_type\": \"Sedan\",\n  \"vehicle_plate\": \"KA01AB1234\",\n  \"is_active\": true,\n  \"city\": \"Bangalore\",\n  \"password\": \"bob@123\",\n  \"role\": \"driver\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Driver - Update Status",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Update driver activity status via PATCH /v1/drivers/:id/status.\n\nExample body:\n{\n  \"is_active\": true\n}\n\nExpected response shape (200):\n{\n  \"id\": 2001,\n  \"is_active\": true,\n  \"updatedAt\": \"...\"\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/drivers/{{driverId}}/status",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "drivers",
+            "{{driverId}}",
+            "status"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "Trip - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "description": "Create trip via POST /v1/trips.\n\nExample body:\n{\n  \"rider_id\": 101,\n  \"pickup_location\": \"BTM\",\n  \"drop_location\": \"HSR\",\n  \"distance_km\": 8,\n  \"city\": \"Bangalore\"\n}\n\nExpected response shape (201):\n{\n  \"id\": 501,\n  \"rider_id\": 101,\n  \"trip_status\": \"REQUESTED\",\n  \"distance_km\": 8,\n  \"surge_multiplier\": 1.2\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/trips",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "trips"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rider_id\": 101,\n  \"pickup_location\": \"BTM\",\n  \"drop_location\": \"HSR\",\n  \"distance_km\": 8,\n  \"city\": \"Bangalore\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Trip - Accept",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Accept trip via POST /v1/trips/:id/accept.\n\nExample body:\n{\n  \"driver_id\": 2001\n}\n\nExpected response shape (200):\n{\n  \"id\": 501,\n  \"driver_id\": 2001,\n  \"trip_status\": \"ACCEPTED\",\n  \"accepted_at\": \"...\"\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/trips/{{tripId}}/accept",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "trips",
+            "{{tripId}}",
+            "accept"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"driver_id\": 2001\n}"
+        }
+      }
+    },
+    {
+      "name": "Trip - Complete",
+      "request": {
+        "method": "POST",
+        "description": "Complete trip via POST /v1/trips/:id/complete.\n\nExpected response shape (200):\n{\n  \"trip\": {\n    \"id\": 501,\n    \"trip_status\": \"COMPLETED\",\n    \"fare_amount\": 136,\n    \"payment_status\": \"COMPLETED\"\n  },\n  \"payment\": {\n    \"id\": 701,\n    \"status\": \"COMPLETED\",\n    \"amount\": 136\n  }\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/trips/{{tripId}}/complete",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "trips",
+            "{{tripId}}",
+            "complete"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Trip - Cancel",
+      "request": {
+        "method": "POST",
+        "description": "Cancel trip via POST /v1/trips/:id/cancel.\n\nExpected response shape (200):\n{\n  \"trip\": {\n    \"id\": 501,\n    \"trip_status\": \"CANCELLED\"\n  },\n  \"cancellation_fee\": 0\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/trips/{{tripId}}/cancel",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "trips",
+            "{{tripId}}",
+            "cancel"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Payment - Charge (Idempotent)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "11111111-2222-4333-8444-555555555555"
+          }
+        ],
+        "description": "Charge payment via POST /v1/payments/charge.\n\nExample body:\n{\n  \"trip_id\": 501,\n  \"rider_id\": 101,\n  \"amount\": 136,\n  \"idempotency_key\": \"501\"\n}\n\nExpected response shape (201 or 200 replay):\n{\n  \"id\": 701,\n  \"trip_id\": 501,\n  \"amount\": 136,\n  \"status\": \"COMPLETED\",\n  \"idempotency_key\": \"11111111-2222-4333-8444-555555555555\"\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/payments/charge",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "payments",
+            "charge"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"trip_id\": 501,\n  \"rider_id\": 101,\n  \"amount\": 136,\n  \"idempotency_key\": \"501\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Payment - Refund",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Refund payment via POST /v1/payments/:id/refund.\n\nExample body:\n{\n  \"reason\": \"Customer requested cancellation\"\n}\n\nExpected response shape (200):\n{\n  \"id\": 701,\n  \"status\": \"REFUNDED\",\n  \"refund_amount\": 136,\n  \"refunded_at\": \"...\"\n}",
+        "url": {
+          "raw": "{{BASE_URL}}/v1/payments/{{paymentId}}/refund",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "v1",
+            "payments",
+            "{{paymentId}}",
+            "refund"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Customer requested cancellation\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Metrics - User Service",
+      "request": {
+        "method": "GET",
+        "description": "Fetch Prometheus/OpenMetrics text from user service /metrics.\n\nExpected response shape:\n# HELP metric_name ...\n# TYPE metric_name counter|gauge\nmetric_name value",
+        "url": {
+          "raw": "{{BASE_URL}}/metrics",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "metrics"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Metrics - Driver Service",
+      "request": {
+        "method": "GET",
+        "description": "Set {{BASE_URL}} to driver service base URL, then call /metrics.\n\nExpected response shape:\n# HELP metric_name ...\n# TYPE metric_name counter|gauge\nmetric_name value",
+        "url": {
+          "raw": "{{BASE_URL}}/metrics",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "metrics"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Metrics - Trip Service",
+      "request": {
+        "method": "GET",
+        "description": "Set {{BASE_URL}} to trip service base URL, then call /metrics.\n\nExpected counters include:\ntrips_requested_total\ntrips_completed_total",
+        "url": {
+          "raw": "{{BASE_URL}}/metrics",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "metrics"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Metrics - Payment Service",
+      "request": {
+        "method": "GET",
+        "description": "Set {{BASE_URL}} to payment service base URL, then call /metrics.\n\nExpected counters include:\npayments_failed_total",
+        "url": {
+          "raw": "{{BASE_URL}}/metrics",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "metrics"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Metrics - Rating Service",
+      "request": {
+        "method": "GET",
+        "description": "Set {{BASE_URL}} to rating service base URL, then call /metrics.\n\nExpected gauge includes:\navg_driver_rating",
+        "url": {
+          "raw": "{{BASE_URL}}/metrics",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "metrics"
+          ]
+        }
+      }
+    }
+  ]
+}

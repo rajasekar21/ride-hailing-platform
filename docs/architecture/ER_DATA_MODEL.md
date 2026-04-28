@@ -74,6 +74,7 @@ No cross-service SQL joins are used. Services communicate via HTTP and RabbitMQ 
 Add your ER diagram image here:
 
 - `docs/architecture/er-diagram.png`
+- Mermaid source: `docs/architecture/ER_DIAGRAM.md`
 
 Also add one screenshot in:
 

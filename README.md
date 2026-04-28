@@ -306,13 +306,88 @@ To address submission feedback gaps, a dedicated docs pack is now added:
 
 - `docs/README.md`
 - `docs/api/API_DOCUMENTATION.md` (Postman/OpenAPI guidance)
+- `docs/api/postman_collection.json` (ready-to-import Postman v2.1 collection)
 - `docs/architecture/ER_DATA_MODEL.md` (data model + ER diagram placeholder)
+- `docs/architecture/ER_DIAGRAM.md` (Mermaid ER diagram source)
 - `docs/evidence/DEPLOYMENT_EVIDENCE.md` (docker/k8s/api/metrics evidence checklist)
 - `docs/screenshots/README.md` (service/evidence screenshot naming checklist)
 
 Store all service and evidence screenshots under:
 
 - `docs/screenshots/`
+
+---
+
+## Evidence
+
+Capture these screenshots and paste outputs into your final PDF/report.
+
+### Docker
+
+- Screenshot: `docker ps` output table with all ride-hailing containers visible.
+- Screenshot: health checks for all services:
+  - `curl http://localhost:3001/health` (user)
+  - `curl http://localhost:3002/health` (driver)
+  - `curl http://localhost:3000/health` (trip/ride)
+  - `curl http://localhost:3003/health` (payment)
+  - `curl http://localhost:3004/health` (notification)
+  - `curl http://localhost:3005/health` (rating)
+  - `curl http://localhost:3006/health` (auth)
+
+### Kubernetes
+
+- Screenshot: `kubectl get pods -o wide`
+- Screenshot: `kubectl get svc`
+- Screenshot: `kubectl get pvc`
+- Screenshot: `kubectl get hpa`
+
+### End-to-End Flow
+
+Run and screenshot each command with response body visible:
+
+```bash
+# 1) Create rider
+curl -X POST http://<USER_BASE>/v1/riders -H "Content-Type: application/json" -d '{"name":"Demo Rider","email":"demo.rider@example.com","phone":"9000000010","city":"Bangalore","password":"demo@123","role":"rider"}'
+
+# 2) Create driver
+curl -X POST http://<DRIVER_BASE>/v1/drivers -H "Content-Type: application/json" -d '{"id":2201,"name":"Demo Driver","phone":"9111111110","email":"demo.driver@example.com","vehicle_type":"Sedan","vehicle_plate":"KA01ZZ2201","is_active":true,"city":"Bangalore","password":"demo@123","role":"driver"}'
+
+# 3) Create trip
+curl -X POST http://<TRIP_BASE>/v1/trips -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"rider_id":<RIDER_ID>,"pickup_location":"BTM","drop_location":"HSR","city":"Bangalore","distance_km":8}'
+
+# 4) Accept trip
+curl -X POST http://<TRIP_BASE>/v1/trips/<TRIP_ID>/accept -H "Content-Type: application/json" -d '{"driver_id":2201}'
+
+# 5) Complete trip
+curl -X POST http://<TRIP_BASE>/v1/trips/<TRIP_ID>/complete
+```
+
+Expected annotations in screenshots:
+
+- Trip state transitions: `REQUESTED -> ACCEPTED -> COMPLETED`
+- Payment status shown as `COMPLETED` or equivalent paid state
+- Fare amount visible in trip/payment response
+
+### Metrics
+
+- Screenshot command and snippet:
+  - `curl http://<IP>:30003/metrics`
+- Ensure visible lines include these four named metrics:
+  - `trips_requested_total`
+  - `trips_completed_total`
+  - `payments_failed_total`
+  - `avg_driver_rating`
+
+### Logs
+
+- Screenshot:
+  - `kubectl logs <trip-pod-name>`
+- Ensure one visible log line is structured JSON and clearly includes:
+  - `correlationId`
+  - `method`
+  - `path`
+  - `statusCode`
+  - `durationMs`
 
 ---
 
