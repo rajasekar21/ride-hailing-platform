@@ -22,6 +22,7 @@ const Payment = db.define("Payment", {
   method: DataTypes.STRING,
   reference: DataTypes.STRING,
   created_at: DataTypes.STRING,
+  refund_idempotency_key: DataTypes.STRING,
   refunded_at: DataTypes.STRING,
   refund_amount: DataTypes.FLOAT
 });
@@ -89,16 +90,35 @@ app.post("/v1/payments/charge", async (req, res) => {
 });
 
 app.post("/v1/payments/:id/refund", async (req, res) => {
+  const idempotencyKey = req.body?.idempotency_key || req.get("Idempotency-Key") || null;
+  if (idempotencyKey) {
+    const existingRefund = await Payment.findOne({ where: { refund_idempotency_key: idempotencyKey } });
+    if (existingRefund) {
+      if (String(existingRefund.id) !== String(req.params.id)) {
+        return res.status(409).send({ error: "idempotency_key already used for a different payment refund" });
+      }
+      return res.send(existingRefund);
+    }
+  }
+
   const payment = await Payment.findByPk(req.params.id);
   if (!payment) {
     return res.status(404).send({ error: "Payment not found" });
   }
+
+  if (payment.status === "REFUNDED") {
+    return res.send(payment);
+  }
   if (payment.status !== "PAID") {
     return res.status(400).send({ error: "Only paid payments may be refunded" });
   }
+
   payment.status = "REFUNDED";
   payment.refunded_at = new Date().toISOString();
   payment.refund_amount = payment.amount;
+  if (idempotencyKey) {
+    payment.refund_idempotency_key = idempotencyKey;
+  }
   await payment.save();
   res.send(payment);
 });
