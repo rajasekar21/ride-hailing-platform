@@ -33,3 +33,17 @@ Add screenshots in this folder using the naming convention below.
 - Keep terminal text readable (minimum 125% zoom if needed).
 - Include timestamp in terminal for evidence screenshots when possible.
 - Use PNG format for clarity.
+
+## Re-record Workflow Video (Playwright)
+
+- Final video output: `docs/screenshots/videos/workflow-demo-playwright.webm`
+- Install recorder dependencies (first time only):
+  - `cd docs/video-automation`
+  - `npm install`
+  - `npx playwright install chromium`
+- Re-record the guided workflow video:
+  - `cd docs/video-automation`
+  - `node record-workflow-guided.js`
+- Optional faster variant:
+  - `cd docs/video-automation`
+  - `node record-workflow.js`
