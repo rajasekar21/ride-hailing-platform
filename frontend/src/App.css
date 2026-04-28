@@ -1,6 +1,15 @@
-.dashboard {
-  max-width: 1180px;
+.layout {
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+}
+
+.dashboard {
+  max-width: 100%;
+  margin: 0;
   padding: 24px;
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
   color: #0f172a;
@@ -29,6 +38,57 @@
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 10px;
+}
+
+.tab-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+
+.tab-nav.vertical {
+  flex-direction: column;
+}
+
+.sidebar {
+  position: sticky;
+  top: 16px;
+  height: fit-content;
+}
+
+.sidebar h2 {
+  margin-bottom: 6px;
+}
+
+.sidebar-subtext {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #475569;
+  font-size: 14px;
+}
+
+.tab {
+  background: #e2e8f0;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+}
+
+.tab.active {
+  background: linear-gradient(135deg, #4f46e5, #2563eb);
+  color: #fff;
+  border-color: #3730a3;
+}
+
+.demo-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.presenter-note {
+  border-left: 4px solid #4f46e5;
+  background: #eef2ff;
 }
 
 button {
@@ -169,6 +229,15 @@ label {
 }
 
 @media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 8px;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
   .dashboard {
     padding: 16px;
   }

@@ -23,6 +23,15 @@ import {
 import "./App.css";
 
 function App() {
+  const PAGES = {
+    OVERVIEW: "overview",
+    RIDER: "rider",
+    DRIVER: "driver",
+    TRIP: "trip",
+    PAYMENT: "payment",
+    RATING: "rating"
+  };
+  const [activePage, setActivePage] = useState(PAGES.OVERVIEW);
   const [users, setUsers] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [trips, setTrips] = useState([]);
@@ -72,6 +81,26 @@ function App() {
 
   const selectedTrip = trips.find((trip) => trip.id === selectedTripId) || null;
   const canRate = !!selectedTrip && selectedTrip.trip_status === "COMPLETED" && selectedTrip.payment_status === "PAID";
+  const pageOrder = [PAGES.OVERVIEW, PAGES.RIDER, PAGES.DRIVER, PAGES.TRIP, PAGES.PAYMENT, PAGES.RATING];
+  const pageLabel = {
+    [PAGES.OVERVIEW]: "Overview",
+    [PAGES.RIDER]: "Rider Page",
+    [PAGES.DRIVER]: "Driver Page",
+    [PAGES.TRIP]: "Trip Page",
+    [PAGES.PAYMENT]: "Payment Page",
+    [PAGES.RATING]: "Rating Page"
+  };
+  const demoHint = {
+    [PAGES.OVERVIEW]: "Explain architecture and the end-to-end demo journey.",
+    [PAGES.RIDER]: "Create and update a rider to demonstrate Rider Service CRUD.",
+    [PAGES.DRIVER]: "Onboard a driver and toggle active status for assignment readiness.",
+    [PAGES.TRIP]: "Create a trip, then accept and complete it to show lifecycle transitions.",
+    [PAGES.PAYMENT]: "Charge completed trip payment, then fetch or refund a sample payment.",
+    [PAGES.RATING]: "Submit rating only for completed + paid trip to prove business rule."
+  };
+  const currentPageIndex = pageOrder.indexOf(activePage);
+  const nextPage = pageOrder[Math.min(currentPageIndex + 1, pageOrder.length - 1)];
+  const prevPage = pageOrder[Math.max(currentPageIndex - 1, 0)];
 
   const loadDashboard = async () => {
     const requests = await Promise.allSettled([
@@ -195,9 +224,29 @@ function App() {
   if (loading) return <p className="loading">Loading dashboard...</p>;
 
   return (
-    <div className="dashboard">
+    <div className="layout">
+      <aside className="sidebar card">
+        <h2>Demo Pages</h2>
+        <p className="sidebar-subtext">Use this guided flow while recording.</p>
+        <div className="tab-nav vertical">
+          {pageOrder.map((pageKey, idx) => (
+            <button key={pageKey} className={activePage === pageKey ? "tab active" : "tab"} onClick={() => setActivePage(pageKey)}>
+              {idx + 1}. {pageLabel[pageKey]}
+            </button>
+          ))}
+        </div>
+        <div className="demo-nav">
+          <button disabled={currentPageIndex === 0} onClick={() => setActivePage(prevPage)}>Previous Step</button>
+          <button disabled={currentPageIndex === pageOrder.length - 1} onClick={() => setActivePage(nextPage)}>Next Step</button>
+        </div>
+      </aside>
+
+      <div className="dashboard">
       <h1>Ride-Hailing Demo Dashboard</h1>
       <p className="message">{message || "Ready for assignment demo recording."}</p>
+      <section className="card presenter-note">
+        <strong>Presenter hint:</strong> {demoHint[activePage]}
+      </section>
       {warnings.length > 0 && (
         <section className="warning-panel">
           <strong>Some services are unavailable:</strong>
@@ -219,6 +268,53 @@ function App() {
         </button>
       </section>
 
+      {activePage === PAGES.OVERVIEW && (
+      <>
+      <section className="card">
+        <div className="section-header">
+          <h2>Demo Journey</h2>
+          <span className="badge required">Required</span>
+        </div>
+        <p>1) Create rider and driver -> 2) Create trip -> 3) Accept and complete trip -> 4) Charge/refund payment -> 5) Add rating.</p>
+      </section>
+      <section className="grid">
+        <div className="card">
+          <h3>Metrics</h3>
+          <pre>{Object.keys(metrics).length ? JSON.stringify(metrics, null, 2) : "No metrics available yet."}</pre>
+          <div className="metric-highlight">
+            <span>Average Driver Rating</span>
+            <strong>{metrics.avg_driver_rating ?? "N/A"}</strong>
+          </div>
+        </div>
+        <div className="card">
+          <h3>Riders ({users.length})</h3>
+          <ul>
+            {users.slice(0, 8).map((u) => (
+              <li key={u.id || u.email}>{u.name}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="card">
+          <h3>Active Drivers ({drivers.length})</h3>
+          <ul>
+            {drivers.slice(0, 8).map((d) => (
+              <li key={d.id}>{d.name} ({d.vehicle_plate})</li>
+            ))}
+          </ul>
+        </div>
+        <div className="card">
+          <h3>Trips ({trips.length})</h3>
+          <ul>
+            {trips.slice(0, 8).map((t) => (
+              <li key={t.id}>#{t.id} - {t.trip_status} - INR {t.fare_amount || 0}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+      </>
+      )}
+
+      {activePage === PAGES.RIDER && (
       <section className="card">
         <div className="section-header">
           <h2>Rider Service (`/v1/riders`, `/v1/riders/{"{"}id{"}"}`)</h2>
@@ -271,7 +367,9 @@ function App() {
           </div>
         </div>
       </section>
+      )}
 
+      {activePage === PAGES.DRIVER && (
       <section className="card">
         <div className="section-header">
           <h2>Driver Service (`/v1/drivers`, `/v1/drivers/{"{"}id{"}"}/status`)</h2>
@@ -321,7 +419,9 @@ function App() {
           </div>
         </div>
       </section>
+      )}
 
+      {activePage === PAGES.TRIP && (
       <section className="card">
         <div className="section-header">
           <h2>Trip / Dispatch Service (`/v1/trips`, `/v1/trips/{"{"}id{"}"}/accept`, `/v1/trips/{"{"}id{"}"}/complete`)</h2>
@@ -351,7 +451,9 @@ function App() {
           <button disabled={!selectedTripId} onClick={() => onAction(() => cancelRide(selectedTripId), "Trip cancelled.")}>Cancel Trip</button>
         </div>
       </section>
+      )}
 
+      {activePage === PAGES.PAYMENT && (
       <section className="card">
         <div className="section-header">
           <h2>Payment Service (`/v1/payments/charge`, `/v1/payments/{"{"}id{"}"}/refund`)</h2>
@@ -386,7 +488,9 @@ function App() {
         </div>
         {paymentLookup && <pre>{JSON.stringify(paymentLookup, null, 2)}</pre>}
       </section>
+      )}
 
+      {activePage === PAGES.RATING && (
       <section className="card">
         <div className="section-header">
           <h2>Optional Rating Service (`/v1/trips/{"{"}id{"}"}/rating`)</h2>
@@ -417,44 +521,12 @@ function App() {
           Rating is enabled only after trip completion and successful payment (final step).
         </small>
       </section>
+      )}
 
-      <section className="grid">
-        <div className="card">
-          <h3>Metrics</h3>
-          <pre>{Object.keys(metrics).length ? JSON.stringify(metrics, null, 2) : "No metrics available yet."}</pre>
-          <div className="metric-highlight">
-            <span>Average Driver Rating</span>
-            <strong>{metrics.avg_driver_rating ?? "N/A"}</strong>
-          </div>
-        </div>
-        <div className="card">
-          <h3>Riders ({users.length})</h3>
-          <ul>
-            {users.slice(0, 8).map((u) => (
-              <li key={u.id || u.email}>{u.name}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="card">
-          <h3>Active Drivers ({drivers.length})</h3>
-          <ul>
-            {drivers.slice(0, 8).map((d) => (
-              <li key={d.id}>{d.name} ({d.vehicle_plate})</li>
-            ))}
-          </ul>
-        </div>
-        <div className="card">
-          <h3>Trips ({trips.length})</h3>
-          <ul>
-            {trips.slice(0, 8).map((t) => (
-              <li key={t.id}>#{t.id} - {t.trip_status} - INR {t.fare_amount || 0}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
       <section className="card">
         <button onClick={loadDashboard}>Refresh Dashboard</button>
       </section>
+      </div>
     </div>
   );
 }
