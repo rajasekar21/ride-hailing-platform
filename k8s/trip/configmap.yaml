@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trip-config
+  labels:
+    app: trip
+data:
+  PAYMENT_SERVICE_URL: "http://payment:3000"
+  DRIVER_SERVICE_URL: "http://driver:3000"
+  NODE_ENV: "production"

@@ -388,7 +388,7 @@ v1Router.post("/trips/:id/cancel", async (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.send("OK");
+  res.json({ status: "ok", service: "trip" });
 });
 
 v1Router.patch("/trips/:id/payment-status", async (req, res) => {

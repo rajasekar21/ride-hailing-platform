@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trip
+  labels:
+    app: trip
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trip
+  template:
+    metadata:
+      labels:
+        app: trip
+    spec:
+      containers:
+        - name: trip
+          image: trip:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: trip-config
+            - secretRef:
+                name: trip-secret
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: trip-data
+              mountPath: /app/data
+      volumes:
+        - name: trip-data
+          persistentVolumeClaim:
+            claimName: trip-pvc

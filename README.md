@@ -167,6 +167,18 @@ docker build -t frontend ./frontend
 kubectl apply -f k8s/
 ```
 
+### Trip Template (Reference Manifests)
+
+A production-style reference template for the Trip service is available in:
+
+- `k8s/trip/`
+
+Apply only the Trip template with kustomize:
+
+```bash
+kubectl apply -k k8s/trip
+```
+
 This deploys all services including:
 - **auth.yaml** — Auth service with JWT_SECRET Kubernetes Secret
 - **user.yaml** — User service

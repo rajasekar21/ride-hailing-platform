@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: trip
+  labels:
+    app: trip
+spec:
+  type: ClusterIP
+  selector:
+    app: trip
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trip-nodeport
+  labels:
+    app: trip
+spec:
+  type: NodePort
+  selector:
+    app: trip
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      nodePort: 30002
