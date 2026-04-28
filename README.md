@@ -678,6 +678,15 @@ To make rubric verification easier, these required business rules are implemente
   - If `is_active === false`, API returns:
     - `422 { "error": "Driver is not active" }`
 
+- **Payment idempotency + rate limiting**
+  - `POST /v1/payments/charge` requires `Idempotency-Key` header.
+  - Duplicate key requests return stored response and do not reprocess charge.
+  - Idempotency records are stored in SQLite table `idempotency_keys` with expiry cleanup.
+  - Rate limiter is applied on charge endpoint:
+    - max `10` requests per minute per IP
+    - returns `429 { "error": "Too many requests" }`
+  - Reference implementation: `services/payment/index.js`.
+
 This section exists so reviewers can quickly confirm implementation from source, not only from demo output.
 
 ---
