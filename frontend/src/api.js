@@ -1,10 +1,19 @@
 import axios from "axios";
 
-const USER_BASE = import.meta.env.VITE_USER_BASE || "http://localhost:3001";
-const RIDE_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
-const DRIVER_BASE = import.meta.env.VITE_DRIVER_BASE || "http://localhost:3002";
-const PAYMENT_BASE = import.meta.env.VITE_PAYMENT_BASE || "http://localhost:3003";
-const RATING_BASE = import.meta.env.VITE_RATING_BASE || "http://localhost:3005";
+const getCodespaceServiceUrl = (port) => {
+  const host = window.location.hostname;
+  const match = host.match(/^(.*)-\d+\.app\.github\.dev$/);
+  if (match) {
+    return `${window.location.protocol}//${match[1]}-${port}.app.github.dev`;
+  }
+  return `${window.location.protocol}//${host}:${port}`;
+};
+
+const USER_BASE = import.meta.env.VITE_USER_BASE || getCodespaceServiceUrl(3001);
+const RIDE_BASE = import.meta.env.VITE_API_BASE || getCodespaceServiceUrl(3000);
+const DRIVER_BASE = import.meta.env.VITE_DRIVER_BASE || getCodespaceServiceUrl(3002);
+const PAYMENT_BASE = import.meta.env.VITE_PAYMENT_BASE || getCodespaceServiceUrl(3003);
+const RATING_BASE = import.meta.env.VITE_RATING_BASE || getCodespaceServiceUrl(3005);
 
 const requestId = () => `demo-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 const traceId = () => `trace-${Date.now()}-${Math.floor(Math.random() * 1000)}`;

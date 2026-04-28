@@ -159,11 +159,20 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3000');
+    const getSocketServiceUrl = () => {
+      const host = window.location.hostname;
+      const match = host.match(/^(.*)-\d+\.app\.github\.dev$/);
+      if (match) {
+        return `${window.location.protocol}//${match[1]}-3000.app.github.dev`;
+      }
+      return `${window.location.protocol}//${host}:3000`;
+    };
+
+    const newSocket = io(getSocketServiceUrl());
     setSocket(newSocket);
 
     newSocket.on('location-update', (data) => {
-      setLiveLocation(prev => ({ ...prev, [data.tripId]: data.location }));
+      setLiveLocation((prev) => ({ ...prev, [data.tripId]: data.location }));
     });
 
     return () => newSocket.close();
@@ -293,15 +302,28 @@ function App() {
       </section>
       <section className="grid">
         <div className="card">
-          <h3>Metrics</h3>
-          <pre>{Object.keys(metrics).length ? JSON.stringify(metrics, null, 2) : "No metrics available yet."}</pre>
-          <div className="metric-highlight">
-            <span>Average Driver Rating</span>
-            <strong>{metrics.avg_driver_rating ?? "N/A"}</strong>
+          <h3>Key Metrics</h3>
+          <div className="metric-grid">
+            <div className="metric-card">
+              <span>Total Riders</span>
+              <strong>{users.length}</strong>
+            </div>
+            <div className="metric-card">
+              <span>Total Drivers</span>
+              <strong>{drivers.length}</strong>
+            </div>
+            <div className="metric-card">
+              <span>Total Trips</span>
+              <strong>{trips.length}</strong>
+            </div>
+            <div className="metric-card">
+              <span>Average Driver Rating</span>
+              <strong>{metrics.avg_driver_rating ?? "N/A"}</strong>
+            </div>
           </div>
         </div>
         <div className="card">
-          <h3>Riders ({users.length})</h3>
+          <h3>Top Riders</h3>
           <ul>
             {users.slice(0, 8).map((u) => (
               <li key={u.id || u.email}>{u.name}</li>
@@ -309,7 +331,7 @@ function App() {
           </ul>
         </div>
         <div className="card">
-          <h3>Active Drivers ({drivers.length})</h3>
+          <h3>Top Drivers</h3>
           <ul>
             {drivers.slice(0, 8).map((d) => (
               <li key={d.id}>{d.name} ({d.vehicle_plate})</li>
@@ -317,7 +339,7 @@ function App() {
           </ul>
         </div>
         <div className="card">
-          <h3>Trips ({trips.length})</h3>
+          <h3>Recent Trips</h3>
           <ul>
             {trips.slice(0, 8).map((t) => (
               <li key={t.id}>#{t.id} - {t.trip_status} - INR {t.fare_amount || 0}</li>

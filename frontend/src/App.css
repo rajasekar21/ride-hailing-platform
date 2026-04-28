@@ -161,6 +161,33 @@ pre {
   font-size: 13px;
 }
 
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.metric-card {
+  background: #eef2ff;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.metric-card span {
+  display: block;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.metric-card strong {
+  display: block;
+  font-size: 1.6rem;
+  color: #0f172a;
+}
+
 .metric-highlight {
   margin-top: 10px;
   padding: 10px;
