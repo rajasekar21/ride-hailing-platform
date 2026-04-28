@@ -436,19 +436,19 @@ Run and screenshot each command with response body visible:
 
 ```bash
 # 1) Create rider
-curl -X POST http://<USER_BASE>/v1/riders -H "Content-Type: application/json" -d '{"name":"Demo Rider","email":"demo.rider@example.com","phone":"9000000010","city":"Bangalore","password":"demo@123","role":"rider"}'
+curl -X POST http://localhost:3001/v1/riders -H "Content-Type: application/json" -d '{"name":"Demo Rider","email":"demo.rider@example.com","phone":"9000000010","city":"Bangalore","password":"demo@123","role":"rider"}'
 
 # 2) Create driver
-curl -X POST http://<DRIVER_BASE>/v1/drivers -H "Content-Type: application/json" -d '{"id":2201,"name":"Demo Driver","phone":"9111111110","email":"demo.driver@example.com","vehicle_type":"Sedan","vehicle_plate":"KA01ZZ2201","is_active":true,"city":"Bangalore","password":"demo@123","role":"driver"}'
+curl -X POST http://localhost:3002/v1/drivers -H "Content-Type: application/json" -d '{"id":2201,"name":"Demo Driver","phone":"9111111110","email":"demo.driver@example.com","vehicle_type":"Sedan","vehicle_plate":"KA01ZZ2201","is_active":true,"city":"Bangalore","password":"demo@123","role":"driver"}'
 
 # 3) Create trip
-curl -X POST http://<TRIP_BASE>/v1/trips -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"rider_id":<RIDER_ID>,"pickup_location":"BTM","drop_location":"HSR","city":"Bangalore","distance_km":8}'
+curl -X POST http://localhost:3000/v1/trips -H "Content-Type: application/json" -d '{"rider_id":3,"pickup_location":"BTM","drop_location":"HSR","city":"Bangalore","distance_km":8}'
 
 # 4) Accept trip
-curl -X POST http://<TRIP_BASE>/v1/trips/<TRIP_ID>/accept -H "Content-Type: application/json" -d '{"driver_id":2201}'
+curl -X POST http://localhost:3000/v1/trips/3/accept -H "Content-Type: application/json" -d '{"driver_id":2201}'
 
 # 5) Complete trip
-curl -X POST http://<TRIP_BASE>/v1/trips/<TRIP_ID>/complete
+curl -X POST http://localhost:3000/v1/trips/3/complete
 ```
 
 Expected annotations in screenshots:
@@ -484,7 +484,7 @@ curl -X POST http://localhost:3000/v1/trips/3/complete
 ### Metrics
 
 - Screenshot command and snippet:
-  - `curl http://<IP>:30003/metrics`
+  - `curl http://localhost:3003/metrics`
 - Ensure visible lines include these four named metrics:
   - `trips_requested_total`
   - `trips_completed_total`
@@ -737,9 +737,9 @@ curl -X POST http://<MINIKUBE_IP>:30302/login \
 9. Show metrics:
 
    ```bash
-   curl http://<ride-base>/metrics
-   curl http://<payment-base>/metrics
-   curl http://<rating-base>/metrics
+   curl http://localhost:3000/metrics
+   curl http://localhost:3003/metrics
+   curl http://localhost:3005/metrics
    ```
 
 ---
@@ -752,25 +752,6 @@ curl -X POST http://<MINIKUBE_IP>:30302/login \
 * Horizontal scaling (HPA)
 * Distributed data management
 * Real-time simulation
-
----
-
-# 🗣️ Project Story (Human Touch)
-
-This project evolved through multiple validation rounds, not a single-pass build.  
-We refined metric names to match rubric wording exactly, fixed schema mismatches between runtime models and seed scripts, and stabilized the end-to-end flow so rating remains the final business step after payment confirmation.
-
-## Challenges We Faced
-
-- Minikube on Windows (Docker driver) required service URL tunneling for reliable host access.
-- Payment metrics initially had conflicting endpoint behavior and needed consolidation.
-- Auth + seeded data had to be aligned (`password`, `role`) to keep demo flows reproducible.
-
-## What We Would Improve Next
-
-- Publish an interactive Swagger UI page from the generated OpenAPI spec.
-- Add richer ER diagrams with versioned schema snapshots.
-- Add a single-command PDF evidence export bundling screenshots and logs.
 
 ---
 

@@ -125,9 +125,9 @@ Screenshots:
 Recommended commands:
 
 ```bash
-curl http://<ride-base>/metrics
-curl http://<payment-base>/metrics
-curl http://<rating-base>/metrics
+curl http://localhost:3000/metrics
+curl http://localhost:3003/metrics
+curl http://localhost:3005/metrics
 kubectl logs deployment/notification --since=10m
 ```
 
@@ -149,34 +149,7 @@ Tip:
 
 - While taking screenshots, keep terminal zoom at 125% and include the exact metric lines above.
 
-## 5) Human Notes (Add Before Final Submission)
-
-Use this section in your own words so evaluators can see genuine project work.
-
-### What we changed during implementation
-
-- Example: "Initially, payment metrics were split across two `/metrics` handlers, which made dashboard integration inconsistent. We unified metrics to one Prometheus endpoint."
-- Example: "We updated seed schemas to include auth fields (`password`, `role`) so login and end-to-end flows work on fresh setup."
-
-### Challenges we faced
-
-- Challenge 1 (fill by team): `............................................................`
-- Fix: `............................................................................`
-- Challenge 2 (fill by team): `............................................................`
-- Fix: `............................................................................`
-
-### Why this design
-
-- Explain why you used database-per-service.
-- Explain why rating is kept as final business step.
-- Explain why async completion path (`/complete?mode=async`) was important for the assignment.
-
-### What we learned
-
-- `............................................................................`
-- `............................................................................`
-
-## 6) Verified Kubernetes E2E Run (Latest)
+## 5) Verified Kubernetes E2E Run (Latest)
 
 This section records one full run executed on Minikube service URLs.
 
