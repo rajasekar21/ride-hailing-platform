@@ -18,6 +18,7 @@ Add screenshots in this folder using the naming convention below.
 - `evidence-docker-ps.png`
 - `evidence-kubectl-get-pods.png`
 - `evidence-kubectl-get-svc.png`
+- `evidence-k8s-probes-check.png` (readiness/liveness presence across manifests)
 - `evidence-api-create-rider.png`
 - `evidence-api-create-driver.png`
 - `evidence-api-create-trip.png`

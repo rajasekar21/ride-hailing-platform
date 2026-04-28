@@ -404,6 +404,7 @@ Capture these screenshots and paste outputs into your final PDF/report.
 - Screenshot: `kubectl get svc`
 - Screenshot: `kubectl get pvc`
 - Screenshot: `kubectl get hpa`
+- Screenshot: `rg -n "readinessProbe|livenessProbe" k8s/*.yaml k8s/trip/*.yaml` (probe coverage proof)
 
 ### End-to-End Flow
 

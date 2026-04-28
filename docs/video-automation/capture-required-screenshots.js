@@ -120,11 +120,20 @@ async function main() {
     const dockerPs = runCommand("docker ps");
     await screenshotText(page, "evidence-docker-ps.png", "Docker Containers", "docker ps", dockerPs.output);
 
-    const pods = runCommand("kubectl get pods -o wide");
-    await screenshotText(page, "evidence-kubectl-get-pods.png", "Kubernetes Pods", "kubectl get pods -o wide", pods.output);
+    const pods = runCommand("kubectl get pods");
+    await screenshotText(page, "evidence-kubectl-get-pods.png", "Kubernetes Pods", "kubectl get pods", pods.output);
 
     const svc = runCommand("kubectl get svc");
     await screenshotText(page, "evidence-kubectl-get-svc.png", "Kubernetes Services", "kubectl get svc", svc.output);
+
+    const probes = runCommand("rg -n \"readinessProbe|livenessProbe\" k8s/*.yaml k8s/trip/*.yaml");
+    await screenshotText(
+      page,
+      "evidence-k8s-probes-check.png",
+      "K8s Probe Coverage",
+      "rg -n \"readinessProbe|livenessProbe\" k8s/*.yaml k8s/trip/*.yaml",
+      probes.output
+    );
 
     const logs =
       runCommand("kubectl logs deployment/notification --since=10m");
