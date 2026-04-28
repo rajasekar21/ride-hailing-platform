@@ -2,25 +2,22 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const { Sequelize, DataTypes } = require("sequelize");
-const promClient = require("prom-client");
+const logger = require("../shared/logger");
+const correlationMiddleware = require("../shared/correlationMiddleware");
+const {
+  client,
+  register,
+  avgDriverRating
+} = require("../shared/metrics");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
-// Prometheus metrics
-const register = new promClient.Registry();
-promClient.collectDefaultMetrics({ register });
-
-const ratingsTotal = new promClient.Gauge({
+const ratingsTotal = new client.Gauge({
   name: 'rating_ratings_total',
   help: 'Total number of ratings',
-  registers: [register]
-});
-
-const averageRating = new promClient.Gauge({
-  name: 'avg_driver_rating',
-  help: 'Average driver rating',
   registers: [register]
 });
 
@@ -43,11 +40,19 @@ db.sync();
 const TRIP_SERVICE_URL = process.env.TRIP_SERVICE_URL || "http://ride:3000";
 
 app.use((req, res, next) => {
-  const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
-  const traceId = req.get("X-Trace-ID") || requestId;
-  req.requestId = requestId;
-  req.traceId = traceId;
-  console.log(JSON.stringify({ requestId, traceId, method: req.method, path: req.path, body: req.body }));
+  const startMs = Date.now();
+  req.requestId = req.correlationId;
+  req.traceId = req.correlationId;
+  logger.info({ correlationId: req.correlationId, method: req.method, path: req.path }, "request started");
+  res.on("finish", () => {
+    logger.info({
+      correlationId: req.correlationId,
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      durationMs: Date.now() - startMs
+    }, "request completed");
+  });
   next();
 });
 
@@ -60,7 +65,11 @@ app.post("/v1/trips/:id/rating", async (req, res) => {
     }
 
     const tripResponse = await axios.get(`${TRIP_SERVICE_URL}/v1/trips/${tripId}`, {
-      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
+      headers: {
+        "X-Request-ID": req.requestId,
+        "X-Trace-ID": req.traceId,
+        "x-correlation-id": req.correlationId
+      }
     });
     const trip = tripResponse.data;
     if (!trip || trip.trip_status !== "COMPLETED") {
@@ -80,6 +89,11 @@ app.post("/v1/trips/:id/rating", async (req, res) => {
       feedback: feedback || "",
       created_at: new Date().toISOString()
     });
+    const summary = await Rating.findAll({ attributes: ["rating"] });
+    const total = summary.length;
+    const sum = summary.reduce((acc, row) => acc + Number(row.rating || 0), 0);
+    const avg = total ? Number((sum / total).toFixed(2)) : 0;
+    avgDriverRating.set(avg);
     res.status(201).send(saved);
   } catch (err) {
     if (err.response && err.response.data) {
@@ -110,11 +124,11 @@ app.get("/metrics", async (req, res) => {
   const sum = ratings.reduce((acc, row) => acc + Number(row.rating || 0), 0);
   const avg = total ? Number((sum / total).toFixed(2)) : 0;
   ratingsTotal.set(total);
-  averageRating.set(avg);
+  avgDriverRating.set(avg);
   res.set('Content-Type', register.contentType);
   res.end(await register.metrics());
 });
 
 app.listen(3000, () => {
-  console.log("Rating service running on port 3000");
+  logger.info({ service: "rating", port: 3000 }, "service started");
 });

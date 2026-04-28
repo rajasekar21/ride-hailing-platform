@@ -5,37 +5,34 @@ const amqp = require("amqplib");
 const rateLimit = require("express-rate-limit");
 const Database = require("better-sqlite3");
 const { Sequelize, DataTypes } = require("sequelize");
-const promClient = require("prom-client");
+const logger = require("../shared/logger");
+const correlationMiddleware = require("../shared/correlationMiddleware");
+const {
+  client,
+  register,
+  paymentsFailedTotal
+} = require("../shared/metrics");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
-// Prometheus metrics
-const register = new promClient.Registry();
-promClient.collectDefaultMetrics({ register });
-
-const paymentsTotal = new promClient.Counter({
+const paymentsTotal = new client.Counter({
   name: "payment_payments_total",
   help: "Total number of payments processed",
   registers: [register]
 });
 
-const paymentAmountTotal = new promClient.Counter({
+const paymentAmountTotal = new client.Counter({
   name: "payment_amount_total",
   help: "Total amount of payments processed",
   registers: [register]
 });
 
-const refundsTotal = new promClient.Counter({
+const refundsTotal = new client.Counter({
   name: "payment_refunds_total",
   help: "Total number of refunds processed",
-  registers: [register]
-});
-
-const paymentsFailedMetric = new promClient.Gauge({
-  name: "payments_failed_total",
-  help: "Total number of failed payment operations",
   registers: [register]
 });
 
@@ -76,7 +73,6 @@ const TRIP_SERVICE_URL = process.env.TRIP_SERVICE_URL || "http://ride:3000";
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
 const EVENTS_EXCHANGE = process.env.EVENTS_EXCHANGE || "ride.events";
 const PAYMENT_QUEUE = process.env.PAYMENT_QUEUE || "payment.queue";
-let paymentsFailedTotal = 0;
 let eventsConsumedTotal = 0;
 let eventConsumerErrorsTotal = 0;
 
@@ -112,11 +108,19 @@ function cleanupExpiredIdempotencyKeys() {
 }
 
 app.use((req, res, next) => {
-  const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
-  const traceId = req.get("X-Trace-ID") || requestId;
-  req.requestId = requestId;
-  req.traceId = traceId;
-  console.log(JSON.stringify({ requestId, traceId, method: req.method, path: req.path, body: req.body }));
+  const startMs = Date.now();
+  req.requestId = req.correlationId;
+  req.traceId = req.correlationId;
+  logger.info({ correlationId: req.correlationId, method: req.method, path: req.path }, "request started");
+  res.on("finish", () => {
+    logger.info({
+      correlationId: req.correlationId,
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      durationMs: Date.now() - startMs
+    }, "request completed");
+  });
   next();
 });
 
@@ -142,7 +146,11 @@ v1Router.post("/payments/charge", chargeRateLimiter, async (req, res) => {
     }
 
     const tripResponse = await axios.get(`${TRIP_SERVICE_URL}/v1/trips/${trip_id}`, {
-      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
+      headers: {
+        "X-Request-ID": req.requestId,
+        "X-Trace-ID": req.traceId,
+        "x-correlation-id": req.correlationId
+      }
     });
     const trip = tripResponse.data;
     if (!trip || trip.trip_status !== "COMPLETED") {
@@ -168,7 +176,7 @@ v1Router.post("/payments/charge", chargeRateLimiter, async (req, res) => {
 
     return res.status(201).send(responsePayload);
   } catch (err) {
-    paymentsFailedTotal += 1;
+    paymentsFailedTotal.inc();
     if (err.response && err.response.data) {
       return res.status(err.response.status).send(err.response.data);
     }
@@ -217,7 +225,6 @@ app.use("/v1", v1Router);
 app.get("/health", (req, res) => res.send("OK"));
 
 app.get("/metrics", async (req, res) => {
-  paymentsFailedMetric.set(paymentsFailedTotal);
   res.set("Content-Type", register.contentType);
   res.end(await register.metrics());
 });
@@ -258,7 +265,8 @@ async function startPaymentConsumer() {
           }, {
             headers: {
               "X-Request-ID": event.request_id || `evt-${Date.now()}`,
-              "X-Trace-ID": trace_id || `trace-${Date.now()}`
+              "X-Trace-ID": trace_id || `trace-${Date.now()}`,
+              "x-correlation-id": trace_id || `trace-${Date.now()}`
             }
           });
 
@@ -273,23 +281,23 @@ async function startPaymentConsumer() {
 
           channel.ack(msg);
         } catch (err) {
-          paymentsFailedTotal += 1;
+          paymentsFailedTotal.inc();
           eventConsumerErrorsTotal += 1;
-          console.error(JSON.stringify({ level: "error", event: "payment_consumer_failed", error: err.message }));
+          logger.info({ event: "payment_consumer_failed", error: err.message }, "payment consumer failed");
           channel.nack(msg, false, false);
         }
       });
       break;
     } catch (err) {
-      console.error(JSON.stringify({ level: "warn", event: "payment_consumer_connect_retry", error: err.message }));
+      logger.info({ event: "payment_consumer_connect_retry", error: err.message }, "payment consumer connect retry");
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
   }
 }
 
 app.listen(3000, () => {
-  console.log("Payment service running on port 3000");
+  logger.info({ service: "payment", port: 3000 }, "service started");
   startPaymentConsumer().catch((err) => {
-    console.error(JSON.stringify({ level: "error", event: "payment_consumer_start_failed", error: err.message }));
+    logger.info({ event: "payment_consumer_start_failed", error: err.message }, "payment consumer start failed");
   });
 });

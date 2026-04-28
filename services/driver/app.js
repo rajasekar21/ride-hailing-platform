@@ -2,10 +2,13 @@ const express = require("express");
 const cors = require("cors");
 const { Sequelize, DataTypes } = require("sequelize");
 const promClient = require("prom-client");
+const logger = require("../shared/logger");
+const correlationMiddleware = require("../shared/correlationMiddleware");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
 // Prometheus metrics
 const register = new promClient.Registry();
@@ -45,11 +48,19 @@ const Driver = db.define("Driver", {
 db.sync();
 
 app.use((req, res, next) => {
-  const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
-  const traceId = req.get("X-Trace-ID") || requestId;
-  req.requestId = requestId;
-  req.traceId = traceId;
-  console.log(JSON.stringify({ requestId, traceId, method: req.method, path: req.path, query: req.query, body: req.body }));
+  const startMs = Date.now();
+  req.requestId = req.correlationId;
+  req.traceId = req.correlationId;
+  logger.info({ correlationId: req.correlationId, method: req.method, path: req.path }, "request started");
+  res.on("finish", () => {
+    logger.info({
+      correlationId: req.correlationId,
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      durationMs: Date.now() - startMs
+    }, "request completed");
+  });
   next();
 });
 
@@ -124,5 +135,5 @@ app.get("/metrics", async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log("Driver service running on port 3000");
+  logger.info({ service: "driver", port: 3000 }, "service started");
 });

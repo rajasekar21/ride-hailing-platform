@@ -2,11 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const amqp = require("amqplib");
 const promClient = require("prom-client");
+const logger = require("../shared/logger");
+const correlationMiddleware = require("../shared/correlationMiddleware");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
 const EVENTS_EXCHANGE = process.env.EVENTS_EXCHANGE || "ride.events";
@@ -23,17 +26,25 @@ const notificationEventsConsumedTotal = new promClient.Counter({
 });
 
 app.use((req, res, next) => {
-  const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
-  const traceId = req.get("X-Trace-ID") || requestId;
-  req.requestId = requestId;
-  req.traceId = traceId;
-  console.log(JSON.stringify({ requestId, traceId, method: req.method, path: req.path, body: req.body }));
+  const startMs = Date.now();
+  req.requestId = req.correlationId;
+  req.traceId = req.correlationId;
+  logger.info({ correlationId: req.correlationId, method: req.method, path: req.path }, "request started");
+  res.on("finish", () => {
+    logger.info({
+      correlationId: req.correlationId,
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      durationMs: Date.now() - startMs
+    }, "request completed");
+  });
   next();
 });
 
 app.post("/v1/notifications", (req, res) => {
   const notification = req.body;
-  console.log(JSON.stringify({ type: "notification", traceId: req.traceId, payload: notification }));
+  logger.info({ correlationId: req.correlationId, type: "notification", payload: notification }, "notification request");
   res.status(201).send({ status: "sent", notification });
 });
 
@@ -59,24 +70,24 @@ async function startNotificationConsumer() {
         try {
           const event = JSON.parse(msg.content.toString());
           notificationEventsConsumedTotal.inc();
-          console.log(JSON.stringify({ type: "notification_event", event }));
+          logger.info({ type: "notification_event", event }, "notification event consumed");
           channel.ack(msg);
         } catch (err) {
-          console.error(JSON.stringify({ level: "error", event: "notification_consumer_failed", error: err.message }));
+          logger.info({ event: "notification_consumer_failed", error: err.message }, "notification consumer failed");
           channel.nack(msg, false, false);
         }
       });
       break;
     } catch (err) {
-      console.error(JSON.stringify({ level: "warn", event: "notification_consumer_connect_retry", error: err.message }));
+      logger.info({ event: "notification_consumer_connect_retry", error: err.message }, "notification consumer connect retry");
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
   }
 }
 
 app.listen(3000, () => {
-  console.log("Notification service running on port 3000");
+  logger.info({ service: "notification", port: 3000 }, "service started");
   startNotificationConsumer().catch((err) => {
-    console.error(JSON.stringify({ level: "error", event: "notification_consumer_start_failed", error: err.message }));
+    logger.info({ event: "notification_consumer_start_failed", error: err.message }, "notification consumer start failed");
   });
 });

@@ -3,6 +3,8 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const promClient = require("prom-client");
+const logger = require("../shared/logger");
+const correlationMiddleware = require("../shared/correlationMiddleware");
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -10,6 +12,24 @@ const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://user:3000";
 const DRIVER_SERVICE_URL = process.env.DRIVER_SERVICE_URL || "http://driver:3000";
 
 app.use(express.json());
+app.use(correlationMiddleware);
+
+app.use((req, res, next) => {
+  const startMs = Date.now();
+  req.requestId = req.correlationId;
+  req.traceId = req.correlationId;
+  logger.info({ correlationId: req.correlationId, method: req.method, path: req.path }, "request started");
+  res.on("finish", () => {
+    logger.info({
+      correlationId: req.correlationId,
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      durationMs: Date.now() - startMs
+    }, "request completed");
+  });
+  next();
+});
 
 // Prometheus metrics
 const register = new promClient.Registry();
@@ -46,7 +66,8 @@ app.post("/login", async (req, res) => {
 
     // Check riders first
     let userResponse = await axios.get(`${USER_SERVICE_URL}/v1/riders`, {
-      params: { email }
+      params: { email },
+      headers: { "x-correlation-id": req.correlationId }
     });
     let users = userResponse.data;
     let user = users.find(u => u.email === email && u.password === password);
@@ -55,7 +76,9 @@ app.post("/login", async (req, res) => {
 
     if (!user) {
       // Check drivers
-      userResponse = await axios.get(`${DRIVER_SERVICE_URL}/v1/drivers`);
+      userResponse = await axios.get(`${DRIVER_SERVICE_URL}/v1/drivers`, {
+        headers: { "x-correlation-id": req.correlationId }
+      });
       users = userResponse.data;
       user = users.find(u => u.email === email && u.password === password);
       service = 'driver';
@@ -70,7 +93,7 @@ app.post("/login", async (req, res) => {
     const token = jwt.sign({ userId: user.id, email: user.email, role: user.role, service }, JWT_SECRET, { expiresIn: '24h' });
     res.send({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, service } });
   } catch (err) {
-    console.error("Login error:", err.message);
+    logger.info({ correlationId: req.correlationId, error: err.message }, "login failed");
     loginFailuresTotal.inc();
     res.status(500).send({ error: "Authentication failed" });
   }
@@ -99,5 +122,5 @@ app.get("/metrics", async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log("Auth service running on port 3000");
+  logger.info({ service: "auth", port: 3000 }, "service started");
 });

@@ -6,7 +6,14 @@ const jwt = require("jsonwebtoken");
 const { Sequelize, DataTypes } = require("sequelize");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
-const promClient = require("prom-client");
+const logger = require("../shared/logger");
+const correlationMiddleware = require("../shared/correlationMiddleware");
+const {
+  client,
+  register,
+  tripsRequestedTotal,
+  tripsCompletedTotal
+} = require("../shared/metrics");
 
 const app = express();
 const server = createServer(app);
@@ -19,30 +26,15 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+app.use(correlationMiddleware);
 
-// Prometheus metrics
-const register = new promClient.Registry();
-promClient.collectDefaultMetrics({ register });
-
-const tripsRequestedTotal = new promClient.Counter({
-  name: 'trips_requested_total',
-  help: 'Total number of trips requested',
-  registers: [register]
-});
-
-const tripsCompletedTotal = new promClient.Counter({
-  name: 'trips_completed_total',
-  help: 'Total number of trips completed',
-  registers: [register]
-});
-
-const eventPublishFailuresTotal = new promClient.Counter({
+const eventPublishFailuresTotal = new client.Counter({
   name: 'ride_event_publish_failures_total',
   help: 'Total number of event publish failures',
   registers: [register]
 });
 
-const completedTripsInDb = new promClient.Gauge({
+const completedTripsInDb = new client.Gauge({
   name: 'ride_completed_trips_in_db',
   help: 'Number of completed trips in database',
   registers: [register]
@@ -81,6 +73,7 @@ const Trip = db.define("Trip", {
   surge_multiplier: { type: DataTypes.FLOAT, defaultValue: 1.0 },
   base_fare: { type: DataTypes.FLOAT, defaultValue: 50.0 },
   fare_amount: { type: DataTypes.FLOAT, defaultValue: 0.0 },
+  status: { type: DataTypes.STRING, defaultValue: "REQUESTED" },
   trip_status: { type: DataTypes.STRING, defaultValue: "REQUESTED" },
   payment_status: { type: DataTypes.STRING, defaultValue: "PENDING" },
   requested_at: DataTypes.STRING,
@@ -115,47 +108,92 @@ async function publishEvent(routingKey, payload) {
     channel.publish(EVENTS_EXCHANGE, routingKey, Buffer.from(JSON.stringify(payload)), { persistent: true });
   } catch (err) {
     eventPublishFailuresTotal.inc();
-    console.error(JSON.stringify({ level: "error", event: "publish_failed", routingKey, error: err.message }));
+    logger.info({ event: "publish_failed", routingKey, error: err.message }, "event publish failed");
   }
 }
 
 app.use((req, res, next) => {
-  const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
-  const traceId = req.get("X-Trace-ID") || requestId;
-  req.requestId = requestId;
-  req.traceId = traceId;
-  console.log(JSON.stringify({ requestId, traceId, method: req.method, path: req.path, body: req.body }));
+  const requestStart = Date.now();
+  req.requestId = req.correlationId;
+  req.traceId = req.correlationId;
+  logger.info(
+    {
+      correlationId: req.correlationId,
+      method: req.method,
+      path: req.path
+    },
+    "request started"
+  );
+  res.on("finish", () => {
+    logger.info(
+      {
+        correlationId: req.correlationId,
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        durationMs: Date.now() - requestStart
+      },
+      "request completed"
+    );
+  });
   next();
 });
 
 function calculateFare(distance, surge, baseFare) {
-  const ratePerKm = 10;
-  // Explicit rubric alignment: variable fare by distance/rate/surge + base fare component.
+  const ratePerKm = 12;
   return Math.round((baseFare + distance * ratePerKm * surge) * 100) / 100;
+}
+
+function getTripStatus(trip) {
+  return trip.status || trip.trip_status || "REQUESTED";
+}
+
+function setTripStatus(trip, nextStatus) {
+  trip.status = nextStatus;
+  trip.trip_status = nextStatus;
+}
+
+function isValidTransition(from, to) {
+  const validTransitions = {
+    REQUESTED: new Set(["ACCEPTED", "CANCELLED"]),
+    ACCEPTED: new Set(["ONGOING", "CANCELLED"]),
+    ONGOING: new Set(["COMPLETED", "CANCELLED"]),
+    COMPLETED: new Set([]),
+    CANCELLED: new Set([]),
+    PAYMENT_FAILED: new Set([])
+  };
+  return validTransitions[from]?.has(to) || false;
+}
+
+function ensureTransitionOrThrow(res, trip, to) {
+  const from = getTripStatus(trip);
+  if (!isValidTransition(from, to)) {
+    res.status(400).send({ error: `Invalid state transition from ${from} to ${to}` });
+    return false;
+  }
+  return true;
 }
 
 const v1Router = express.Router();
 
 v1Router.post("/trips", verifyToken, async (req, res) => {
   try {
-    const { rider_id, pickup_location, drop_location, city, distance_km, surge_multiplier = 1.0, base_fare = 50.0 } = req.body;
+    const { rider_id, pickup_location, drop_location, city, distance_km } = req.body;
     if (!rider_id || !pickup_location || !drop_location || !city || typeof distance_km !== "number") {
       return res.status(400).send({ error: "rider_id, pickup_location, drop_location, city, and distance_km are required" });
     }
-    if (!ALLOWED_SURGE_MULTIPLIERS.has(Number(surge_multiplier))) {
-      return res.status(400).send({ error: "surge_multiplier must be one of 1.0, 1.2, or 1.5" });
-    }
-    if (typeof base_fare !== "number" || base_fare < 0) {
-      return res.status(400).send({ error: "base_fare must be a non-negative number" });
-    }
+    const surgeOptions = [1.0, 1.2, 1.5];
+    const randomSurge = surgeOptions[Math.floor(Math.random() * surgeOptions.length)];
+    const baseFare = 20;
     const trip = await Trip.create({
       rider_id,
       pickup_location,
       drop_location,
       city,
       distance_km,
-      surge_multiplier,
-      base_fare,
+      surge_multiplier: randomSurge,
+      base_fare: baseFare,
+      status: "REQUESTED",
       trip_status: "REQUESTED",
       requested_at: new Date().toISOString()
     });
@@ -181,25 +219,35 @@ v1Router.get("/trips/:id", async (req, res) => {
 
 v1Router.post("/trips/:id/accept", async (req, res) => {
   try {
+    const { driver_id } = req.body;
+    if (!driver_id) {
+      return res.status(400).send({ error: "driver_id is required" });
+    }
     const trip = await Trip.findByPk(req.params.id);
     if (!trip) {
       return res.status(404).send({ error: "Trip not found" });
     }
-    if (trip.trip_status !== "REQUESTED") {
-      return res.status(400).send({ error: "Trip must be in REQUESTED state to accept" });
+    if (!ensureTransitionOrThrow(res, trip, "ACCEPTED")) {
+      return;
     }
 
-    const response = await axios.get(`${DRIVER_SERVICE_URL}/v1/drivers?active=true`, {
-      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
+    const response = await axios.get(`${DRIVER_SERVICE_URL}/v1/drivers/${driver_id}`, {
+      headers: {
+        "X-Request-ID": req.requestId,
+        "X-Trace-ID": req.traceId,
+        "x-correlation-id": req.correlationId
+      }
     });
-    const availableDrivers = response.data || [];
-    if (!availableDrivers.length) {
-      return res.status(503).send({ error: "No active drivers available" });
+    const driver = response.data;
+    if (!driver) {
+      return res.status(404).send({ error: "Driver not found" });
+    }
+    if (driver.is_active === false) {
+      return res.status(422).send({ error: "Driver is not active" });
     }
 
-    const driver = availableDrivers[0];
     trip.driver_id = driver.id;
-    trip.trip_status = "ACCEPTED";
+    setTripStatus(trip, "ACCEPTED");
     trip.accepted_at = new Date().toISOString();
     await trip.save();
 
@@ -216,45 +264,41 @@ v1Router.post("/trips/:id/complete", async (req, res) => {
     if (!trip) {
       return res.status(404).send({ error: "Trip not found" });
     }
-    if (!["ACCEPTED", "ONGOING"].includes(trip.trip_status)) {
-      return res.status(400).send({ error: "Trip must be ACCEPTED or ONGOING to complete" });
+    const currentStatus = getTripStatus(trip);
+    if (currentStatus === "ACCEPTED") {
+      if (!ensureTransitionOrThrow(res, trip, "ONGOING")) {
+        return;
+      }
+      setTripStatus(trip, "ONGOING");
+      await trip.save();
+    } else if (currentStatus !== "ONGOING") {
+      return res.status(400).send({ error: `Invalid state transition from ${currentStatus} to COMPLETED` });
     }
 
-    const fare = calculateFare(trip.distance_km || 0, trip.surge_multiplier || 1.0, trip.base_fare || 0);
+    if (!ensureTransitionOrThrow(res, trip, "COMPLETED")) {
+      return;
+    }
+
+    const fare = calculateFare(trip.distance_km || 0, trip.surge_multiplier || 1.0, 20);
     trip.fare_amount = fare;
     trip.completed_at = new Date().toISOString();
-    trip.trip_status = "COMPLETED";
-    await trip.save();
-    const idempotencyKey = `trip-${trip.id}`;
-    const asyncMode = req.query.mode === "async";
-
-    if (asyncMode) {
-      trip.payment_status = "PROCESSING";
-      await trip.save();
-      await publishEvent("trip.completed", {
-        event: "trip.completed",
-        trace_id: req.traceId,
-        request_id: req.requestId,
-        trip_id: trip.id,
-        rider_id: trip.rider_id,
-        driver_id: trip.driver_id,
-        amount: fare,
-        idempotency_key: idempotencyKey,
-        occurred_at: new Date().toISOString()
-      });
-      tripsCompletedTotal.inc();
-      return res.status(202).send({ trip, payment: { status: "PROCESSING", mode: "async" } });
-    }
-
+    trip.base_fare = 20;
     const paymentResponse = await axios.post(`${PAYMENT_SERVICE_URL}/v1/payments/charge`, {
       trip_id: trip.id,
       amount: fare,
-      idempotency_key: idempotencyKey
+      rider_id: trip.rider_id,
+      idempotency_key: String(trip.id)
     }, {
-      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
+      headers: {
+        "X-Request-ID": req.requestId,
+        "X-Trace-ID": req.traceId,
+        "Idempotency-Key": String(trip.id),
+        "x-correlation-id": req.correlationId
+      }
     });
 
-    trip.payment_status = paymentResponse.data.status || "PAID";
+    setTripStatus(trip, "COMPLETED");
+    trip.payment_status = paymentResponse.data.status || "COMPLETED";
     await trip.save();
 
     await axios.post(`${NOTIFICATION_SERVICE_URL}/v1/notifications`, {
@@ -265,23 +309,32 @@ v1Router.post("/trips/:id/complete", async (req, res) => {
       status: trip.trip_status,
       timestamp: new Date().toISOString()
     }, {
-      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
+      headers: {
+        "X-Request-ID": req.requestId,
+        "X-Trace-ID": req.traceId,
+        "x-correlation-id": req.correlationId
+      }
     }).catch((notificationErr) => {
-      console.error("Notification failed", notificationErr.message);
+      logger.info(
+        {
+          correlationId: req.correlationId,
+          method: req.method,
+          path: req.path,
+          error: notificationErr.message
+        },
+        "notification call failed"
+      );
     });
 
     tripsCompletedTotal.inc();
     res.send({ trip, payment: paymentResponse.data });
   } catch (err) {
     if (trip) {
+      setTripStatus(trip, "PAYMENT_FAILED");
       trip.payment_status = "FAILED";
       await trip.save();
     }
-    if (err.response && err.response.data) {
-      res.status(err.response.status).send(err.response.data);
-    } else {
-      res.status(502).send({ error: "Payment processing failed", details: err.message });
-    }
+    res.status(402).send({ error: "Payment failed", trip_id: Number(req.params.id) });
   }
 });
 
@@ -291,11 +344,30 @@ v1Router.post("/trips/:id/cancel", async (req, res) => {
     if (!trip) {
       return res.status(404).send({ error: "Trip not found" });
     }
-    if (!["REQUESTED", "ACCEPTED", "ONGOING"].includes(trip.trip_status)) {
-      return res.status(400).send({ error: "Only in-progress trips can be cancelled" });
+    const currentStatus = getTripStatus(trip);
+    if (!["REQUESTED", "ACCEPTED", "ONGOING"].includes(currentStatus)) {
+      return res.status(400).send({ error: `Invalid state transition from ${currentStatus} to CANCELLED` });
     }
-    const cancellationFee = ["ACCEPTED", "ONGOING"].includes(trip.trip_status) ? CANCELLATION_FEE : 0;
-    trip.trip_status = "CANCELLED";
+    if (!ensureTransitionOrThrow(res, trip, "CANCELLED")) {
+      return;
+    }
+    const cancellationFee = ["ACCEPTED", "ONGOING"].includes(currentStatus) ? CANCELLATION_FEE : 0;
+    if (cancellationFee > 0) {
+      await axios.post(`${PAYMENT_SERVICE_URL}/v1/payments/charge`, {
+        trip_id: trip.id,
+        amount: cancellationFee,
+        rider_id: trip.rider_id,
+        idempotency_key: `cancel-${trip.id}`
+      }, {
+        headers: {
+          "X-Request-ID": req.requestId,
+          "X-Trace-ID": req.traceId,
+          "Idempotency-Key": `cancel-${trip.id}`,
+          "x-correlation-id": req.correlationId
+        }
+      });
+    }
+    setTripStatus(trip, "CANCELLED");
     trip.cancelled_at = new Date().toISOString();
     await trip.save();
     await publishEvent("trip.cancelled", {
@@ -344,11 +416,11 @@ app.get("/metrics", async (req, res) => {
 
 // WebSocket for live tracking
 io.on('connection', (socket) => {
-  console.log('Client connected for live tracking');
+  logger.info({ socketId: socket.id }, "socket client connected");
 
   socket.on('join-trip', (tripId) => {
     socket.join(`trip-${tripId}`);
-    console.log(`Client joined trip ${tripId}`);
+    logger.info({ socketId: socket.id, tripId }, "socket joined trip room");
   });
 
   socket.on('update-location', (data) => {
@@ -357,10 +429,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
+    logger.info({ socketId: socket.id }, "socket client disconnected");
   });
 });
 
 server.listen(3000, () => {
-  console.log("Ride service running on port 3000");
+  logger.info({ service: "ride", port: 3000 }, "service started");
 });
