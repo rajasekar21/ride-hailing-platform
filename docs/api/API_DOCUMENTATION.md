@@ -14,7 +14,21 @@ Save exported files in this folder or provide links in your submission PDF.
 
 ## Option B: OpenAPI/Swagger
 
-If generated, add:
+Auto-generated spec from code is now included:
+
+- `openapi.json` (generated from route files)
+- Generator script: `generate-openapi.js`
+- Generator package manifest: `package.json`
+
+Regenerate anytime:
+
+```bash
+cd docs/api
+npm install
+npm run generate:openapi
+```
+
+If needed, you can additionally add:
 
 - `openapi.yaml` or `openapi.json`
 - Optional Swagger UI screenshot under `docs/screenshots/`

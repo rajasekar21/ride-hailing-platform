@@ -1,0 +1,12 @@
+{
+  "name": "ride-hailing-api-docs",
+  "private": true,
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "generate:openapi": "node generate-openapi.js"
+  },
+  "dependencies": {
+    "swagger-autogen": "^2.23.7"
+  }
+}
