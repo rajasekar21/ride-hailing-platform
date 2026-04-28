@@ -48,7 +48,13 @@ app.post("/v1/riders", async (req, res) => {
 });
 
 app.get("/v1/riders", async (req, res) => {
-  const riders = await Rider.findAll();
+  const { email } = req.query;
+  let riders;
+  if (email) {
+    riders = await Rider.findAll({ where: { email } });
+  } else {
+    riders = await Rider.findAll();
+  }
   res.send(riders);
 });
 

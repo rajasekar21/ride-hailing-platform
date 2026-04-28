@@ -110,6 +110,7 @@ services:
     container_name: auth
     environment:
       - JWT_SECRET=ILoveIndia
+      - USER_SERVICE_URL=http://user:3000
     ports:
       - "3006:3000"
 
