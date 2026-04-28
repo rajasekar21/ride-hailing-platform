@@ -137,3 +137,68 @@ Use this section in your own words so evaluators can see genuine project work.
 
 - `............................................................................`
 - `............................................................................`
+
+## 6) Verified Kubernetes E2E Run (Latest)
+
+This section records one full run executed on Minikube service URLs.
+
+### Service URLs used in run
+
+- Frontend: `http://localhost:5173`
+- User: `http://127.0.0.1:54098`
+- Ride: `http://127.0.0.1:54096`
+- Driver: `http://127.0.0.1:54099`
+- Payment: `http://127.0.0.1:54101`
+- Rating: `http://127.0.0.1:54097`
+- Auth: `http://127.0.0.1:54100`
+
+### Flow summary (request -> accept -> complete -> payment -> rating)
+
+- Rider created:
+  - `id: 3`
+  - `email: e2e1777392846@example.com`
+- Driver created:
+  - `id: 2846`
+  - `is_active: true`
+- Auth:
+  - token received successfully from `/login`
+- Trip created:
+  - `id: 3`
+  - `trip_status: REQUESTED`
+- Trip accepted:
+  - `trip_status: ACCEPTED`
+  - `driver_id: 1`
+- Trip completed:
+  - `trip_status: COMPLETED`
+  - `fare_amount: 120`
+  - payment response `status: PAID`
+- Final trip check:
+  - `trip_status: COMPLETED`
+  - `payment_status: PAID`
+- Rating submitted (final business step):
+  - `trip_id: 3`
+  - `rating: 5`
+
+### Command evidence snippets to capture screenshots
+
+```bash
+# Frontend availability
+curl -I http://localhost:5173
+
+# Kubernetes service tunnels (Windows + Minikube Docker driver)
+minikube service user --url
+minikube service ride --url
+minikube service driver-nodeport --url
+minikube service payment-nodeport --url
+minikube service rating-nodeport --url
+minikube service auth --url
+```
+
+Screenshot mapping for this run:
+
+- `docs/screenshots/evidence-api-create-rider.png` -> rider create response with `id: 3`
+- `docs/screenshots/evidence-api-create-driver.png` -> driver create response with `id: 2846`
+- `docs/screenshots/evidence-api-create-trip.png` -> trip create `REQUESTED`
+- `docs/screenshots/evidence-api-accept-trip.png` -> trip `ACCEPTED`
+- `docs/screenshots/evidence-api-complete-trip.png` -> trip `COMPLETED` + payment `PAID`
+- `docs/screenshots/evidence-api-rating-final-step.png` -> rating saved with `rating: 5`
