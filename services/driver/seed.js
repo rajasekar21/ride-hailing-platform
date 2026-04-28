@@ -17,6 +17,8 @@ const Driver = db.define("Driver", {
   vehicle_plate: DataTypes.STRING,
   is_active: DataTypes.BOOLEAN,
   city: DataTypes.STRING,
+  password: DataTypes.STRING,
+  role: DataTypes.STRING,
   created_at: DataTypes.STRING
 });
 
@@ -38,6 +40,8 @@ async function seed() {
         vehicle_plate: data.vehicle_plate,
         is_active: data.is_active.toLowerCase() === "true",
         city: data.city,
+        password: `driver${parseInt(data.driver_id, 10)}@123`,
+        role: "driver",
         created_at: data.created_at
       });
     })

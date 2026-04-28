@@ -31,6 +31,12 @@ const refundsTotal = new promClient.Counter({
   registers: [register]
 });
 
+const paymentsFailedMetric = new promClient.Gauge({
+  name: 'payments_failed_total',
+  help: 'Total number of failed payment operations',
+  registers: [register]
+});
+
 const db = new Sequelize({
   dialect: "sqlite",
   storage: process.env.DB_PATH || "payments.db"
@@ -157,6 +163,7 @@ app.get("/v1/payments/:id", async (req, res) => {
 app.get("/health", (req, res) => res.send("OK"));
 
 app.get("/metrics", async (req, res) => {
+  paymentsFailedMetric.set(paymentsFailedTotal);
   res.set('Content-Type', register.contentType);
   res.end(await register.metrics());
 });
@@ -223,16 +230,6 @@ async function startPaymentConsumer() {
     }
   }
 }
-
-app.get("/metrics", async (req, res) => {
-  res.send({
-    payments_failed_total: paymentsFailedTotal,
-    payments_total: await Payment.count(),
-    refunded_total: await Payment.count({ where: { status: "REFUNDED" } }),
-    payment_events_consumed_total: eventsConsumedTotal,
-    payment_event_consumer_errors_total: eventConsumerErrorsTotal
-  });
-});
 
 app.listen(3000, () => {
   console.log("Payment service running on port 3000");

@@ -25,13 +25,13 @@ const register = new promClient.Registry();
 promClient.collectDefaultMetrics({ register });
 
 const tripsRequestedTotal = new promClient.Counter({
-  name: 'ride_trips_requested_total',
+  name: 'trips_requested_total',
   help: 'Total number of trips requested',
   registers: [register]
 });
 
 const tripsCompletedTotal = new promClient.Counter({
-  name: 'ride_trips_completed_total',
+  name: 'trips_completed_total',
   help: 'Total number of trips completed',
   registers: [register]
 });

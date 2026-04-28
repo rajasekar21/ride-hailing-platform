@@ -46,8 +46,10 @@ db.sync();
 
 app.use((req, res, next) => {
   const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
+  const traceId = req.get("X-Trace-ID") || requestId;
   req.requestId = requestId;
-  console.log(JSON.stringify({ requestId, method: req.method, path: req.path, query: req.query, body: req.body }));
+  req.traceId = traceId;
+  console.log(JSON.stringify({ requestId, traceId, method: req.method, path: req.path, query: req.query, body: req.body }));
   next();
 });
 

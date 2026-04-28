@@ -46,6 +46,7 @@ services:
       - CANCELLATION_FEE=30
       - RABBITMQ_URL=amqp://rabbitmq:5672
       - EVENTS_EXCHANGE=ride.events
+      - JWT_SECRET=ILoveIndia
     command: sh -c "node seed.js && node app.js"
     depends_on:
       - rabbitmq

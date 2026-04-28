@@ -14,9 +14,11 @@ const Payment = db.define("Payment", {
   amount: DataTypes.FLOAT,
   currency: { type: DataTypes.STRING, defaultValue: "INR" },
   status: DataTypes.STRING,
+  idempotency_key: DataTypes.STRING,
   method: DataTypes.STRING,
   reference: DataTypes.STRING,
   created_at: DataTypes.STRING,
+  refund_idempotency_key: DataTypes.STRING,
   refunded_at: DataTypes.STRING,
   refund_amount: DataTypes.FLOAT
 });

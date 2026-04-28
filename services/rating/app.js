@@ -19,7 +19,7 @@ const ratingsTotal = new promClient.Gauge({
 });
 
 const averageRating = new promClient.Gauge({
-  name: 'rating_average_rating',
+  name: 'avg_driver_rating',
   help: 'Average driver rating',
   registers: [register]
 });
@@ -44,8 +44,10 @@ const TRIP_SERVICE_URL = process.env.TRIP_SERVICE_URL || "http://ride:3000";
 
 app.use((req, res, next) => {
   const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
+  const traceId = req.get("X-Trace-ID") || requestId;
   req.requestId = requestId;
-  console.log(JSON.stringify({ requestId, method: req.method, path: req.path, body: req.body }));
+  req.traceId = traceId;
+  console.log(JSON.stringify({ requestId, traceId, method: req.method, path: req.path, body: req.body }));
   next();
 });
 
@@ -58,7 +60,7 @@ app.post("/v1/trips/:id/rating", async (req, res) => {
     }
 
     const tripResponse = await axios.get(`${TRIP_SERVICE_URL}/v1/trips/${tripId}`, {
-      headers: { "X-Request-ID": req.requestId }
+      headers: { "X-Request-ID": req.requestId, "X-Trace-ID": req.traceId }
     });
     const trip = tripResponse.data;
     if (!trip || trip.trip_status !== "COMPLETED") {

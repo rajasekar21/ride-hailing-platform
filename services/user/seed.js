@@ -14,6 +14,8 @@ const Rider = db.define("Rider", {
   email: DataTypes.STRING,
   phone: DataTypes.STRING,
   city: DataTypes.STRING,
+  password: DataTypes.STRING,
+  role: DataTypes.STRING,
   created_at: DataTypes.STRING
 });
 
@@ -32,6 +34,8 @@ async function seed() {
         email: data.email,
         phone: data.phone,
         city: data.city,
+        password: `rider${parseInt(data.rider_id, 10)}@123`,
+        role: "rider",
         created_at: data.created_at
       });
     })
