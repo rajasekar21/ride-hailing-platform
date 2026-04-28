@@ -3,10 +3,33 @@ const cors = require("cors");
 const axios = require("axios");
 const amqp = require("amqplib");
 const { Sequelize, DataTypes } = require("sequelize");
+const promClient = require("prom-client");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Prometheus metrics
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+
+const paymentsTotal = new promClient.Counter({
+  name: 'payment_payments_total',
+  help: 'Total number of payments processed',
+  registers: [register]
+});
+
+const paymentAmountTotal = new promClient.Counter({
+  name: 'payment_amount_total',
+  help: 'Total amount of payments processed',
+  registers: [register]
+});
+
+const refundsTotal = new promClient.Counter({
+  name: 'payment_refunds_total',
+  help: 'Total number of refunds processed',
+  registers: [register]
+});
 
 const db = new Sequelize({
   dialect: "sqlite",
@@ -132,6 +155,11 @@ app.get("/v1/payments/:id", async (req, res) => {
 });
 
 app.get("/health", (req, res) => res.send("OK"));
+
+app.get("/metrics", async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
 
 async function startPaymentConsumer() {
   while (true) {

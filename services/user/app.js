@@ -1,10 +1,21 @@
 const express = require("express");
 const cors = require("cors");
 const { Sequelize, DataTypes } = require("sequelize");
+const promClient = require("prom-client");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Prometheus metrics
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+
+const ridersTotal = new promClient.Gauge({
+  name: 'user_riders_total',
+  help: 'Total number of riders',
+  registers: [register]
+});
 
 const db = new Sequelize({
   dialect: "sqlite",
@@ -107,6 +118,13 @@ app.post("/users", async (req, res) => {
 
 app.get("/health", (req, res) => {
   res.send("OK");
+});
+
+app.get("/metrics", async (req, res) => {
+  const riderCount = await Rider.count();
+  ridersTotal.set(riderCount);
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 app.listen(3000, () => {

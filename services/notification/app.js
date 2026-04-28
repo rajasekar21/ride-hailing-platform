@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const amqp = require("amqplib");
+const promClient = require("prom-client");
 
 const app = express();
 
@@ -10,7 +11,16 @@ app.use(express.json());
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
 const EVENTS_EXCHANGE = process.env.EVENTS_EXCHANGE || "ride.events";
 const NOTIFICATION_QUEUE = process.env.NOTIFICATION_QUEUE || "notification.queue";
-let notificationEventsConsumedTotal = 0;
+
+// Prometheus metrics
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+
+const notificationEventsConsumedTotal = new promClient.Counter({
+  name: 'notification_events_consumed_total',
+  help: 'Total number of notification events consumed',
+  registers: [register]
+});
 
 app.use((req, res, next) => {
   const requestId = req.get("X-Request-ID") || `req-${Date.now()}`;
@@ -29,10 +39,9 @@ app.post("/v1/notifications", (req, res) => {
 
 app.get("/health", (req, res) => res.send("OK"));
 
-app.get("/metrics", (req, res) => {
-  res.send({
-    notification_events_consumed_total: notificationEventsConsumedTotal
-  });
+app.get("/metrics", async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 async function startNotificationConsumer() {
@@ -49,7 +58,7 @@ async function startNotificationConsumer() {
         if (!msg) return;
         try {
           const event = JSON.parse(msg.content.toString());
-          notificationEventsConsumedTotal += 1;
+          notificationEventsConsumedTotal.inc();
           console.log(JSON.stringify({ type: "notification_event", event }));
           channel.ack(msg);
         } catch (err) {

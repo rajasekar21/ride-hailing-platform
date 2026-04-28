@@ -1,10 +1,27 @@
 const express = require("express");
 const cors = require("cors");
 const { Sequelize, DataTypes } = require("sequelize");
+const promClient = require("prom-client");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Prometheus metrics
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+
+const driversTotal = new promClient.Gauge({
+  name: 'driver_drivers_total',
+  help: 'Total number of drivers',
+  registers: [register]
+});
+
+const activeDriversTotal = new promClient.Gauge({
+  name: 'driver_active_drivers_total',
+  help: 'Total number of active drivers',
+  registers: [register]
+});
 
 const db = new Sequelize({
   dialect: "sqlite",
@@ -90,6 +107,15 @@ app.patch("/v1/drivers/:id/status", async (req, res) => {
 });
 
 app.get("/health", (req, res) => res.send("OK"));
+
+app.get("/metrics", async (req, res) => {
+  const driverCount = await Driver.count();
+  const activeDriverCount = await Driver.count({ where: { is_active: true } });
+  driversTotal.set(driverCount);
+  activeDriversTotal.set(activeDriverCount);
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
 
 app.listen(3000, () => {
   console.log("Driver service running on port 3000");

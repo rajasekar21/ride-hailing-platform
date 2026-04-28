@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const { Sequelize, DataTypes } = require("sequelize");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const promClient = require("prom-client");
 
 const app = express();
 const server = createServer(app);
@@ -18,6 +19,34 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+
+// Prometheus metrics
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+
+const tripsRequestedTotal = new promClient.Counter({
+  name: 'ride_trips_requested_total',
+  help: 'Total number of trips requested',
+  registers: [register]
+});
+
+const tripsCompletedTotal = new promClient.Counter({
+  name: 'ride_trips_completed_total',
+  help: 'Total number of trips completed',
+  registers: [register]
+});
+
+const eventPublishFailuresTotal = new promClient.Counter({
+  name: 'ride_event_publish_failures_total',
+  help: 'Total number of event publish failures',
+  registers: [register]
+});
+
+const completedTripsInDb = new promClient.Gauge({
+  name: 'ride_completed_trips_in_db',
+  help: 'Number of completed trips in database',
+  registers: [register]
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -70,9 +99,6 @@ const EVENTS_EXCHANGE = process.env.EVENTS_EXCHANGE || "ride.events";
 const CANCELLATION_FEE = Number(process.env.CANCELLATION_FEE || 30);
 const ALLOWED_SURGE_MULTIPLIERS = new Set([1.0, 1.2, 1.5]);
 
-let tripsRequestedTotal = 0;
-let tripsCompletedTotal = 0;
-let eventPublishFailuresTotal = 0;
 let rabbitChannel;
 
 async function getRabbitChannel() {
@@ -88,7 +114,7 @@ async function publishEvent(routingKey, payload) {
     const channel = await getRabbitChannel();
     channel.publish(EVENTS_EXCHANGE, routingKey, Buffer.from(JSON.stringify(payload)), { persistent: true });
   } catch (err) {
-    eventPublishFailuresTotal += 1;
+    eventPublishFailuresTotal.inc();
     console.error(JSON.stringify({ level: "error", event: "publish_failed", routingKey, error: err.message }));
   }
 }
@@ -131,7 +157,7 @@ app.post("/v1/trips", verifyToken, async (req, res) => {
       trip_status: "REQUESTED",
       requested_at: new Date().toISOString()
     });
-    tripsRequestedTotal += 1;
+    tripsRequestedTotal.inc();
     res.status(201).send(trip);
   } catch (err) {
     res.status(500).send({ error: "Failed to create trip" });
@@ -214,7 +240,7 @@ app.post("/v1/trips/:id/complete", async (req, res) => {
         idempotency_key: idempotencyKey,
         occurred_at: new Date().toISOString()
       });
-      tripsCompletedTotal += 1;
+      tripsCompletedTotal.inc();
       return res.status(202).send({ trip, payment: { status: "PROCESSING", mode: "async" } });
     }
 
@@ -242,7 +268,7 @@ app.post("/v1/trips/:id/complete", async (req, res) => {
       console.error("Notification failed", notificationErr.message);
     });
 
-    tripsCompletedTotal += 1;
+    tripsCompletedTotal.inc();
     res.send({ trip, payment: paymentResponse.data });
   } catch (err) {
     if (trip) {
@@ -327,12 +353,9 @@ app.patch("/v1/trips/:id/payment-status", async (req, res) => {
 
 app.get("/metrics", async (req, res) => {
   const completedRatings = await Trip.count({ where: { trip_status: "COMPLETED" } });
-  res.send({
-    trips_requested_total: tripsRequestedTotal,
-    trips_completed_total: tripsCompletedTotal,
-    completed_trips_in_db: completedRatings,
-    event_publish_failures_total: eventPublishFailuresTotal
-  });
+  completedTripsInDb.set(completedRatings);
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 // WebSocket for live tracking

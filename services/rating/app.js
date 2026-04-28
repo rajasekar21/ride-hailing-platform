@@ -2,10 +2,27 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const { Sequelize, DataTypes } = require("sequelize");
+const promClient = require("prom-client");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Prometheus metrics
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+
+const ratingsTotal = new promClient.Gauge({
+  name: 'rating_ratings_total',
+  help: 'Total number of ratings',
+  registers: [register]
+});
+
+const averageRating = new promClient.Gauge({
+  name: 'rating_average_rating',
+  help: 'Average driver rating',
+  registers: [register]
+});
 
 const db = new Sequelize({
   dialect: "sqlite",
@@ -89,10 +106,11 @@ app.get("/metrics", async (req, res) => {
   const ratings = await Rating.findAll({ attributes: ["rating"] });
   const total = ratings.length;
   const sum = ratings.reduce((acc, row) => acc + Number(row.rating || 0), 0);
-  res.send({
-    avg_driver_rating: total ? Number((sum / total).toFixed(2)) : 0,
-    ratings_total: total
-  });
+  const avg = total ? Number((sum / total).toFixed(2)) : 0;
+  ratingsTotal.set(total);
+  averageRating.set(avg);
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 app.listen(3000, () => {
