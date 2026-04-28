@@ -398,13 +398,30 @@ Capture these screenshots and paste outputs into your final PDF/report.
   - `curl http://localhost:3005/health` (rating)
   - `curl http://localhost:3006/health` (auth)
 
+Committed image mapping:
+
+- `docs/screenshots/evidence-docker-ps.png` -> `docker ps`
+- `docs/screenshots/service-user-health.png` -> `curl http://localhost:3001/health`
+- `docs/screenshots/service-driver-health.png` -> `curl http://localhost:3002/health`
+- `docs/screenshots/service-ride-health.png` -> `curl http://localhost:3000/health`
+- `docs/screenshots/service-payment-health.png` -> `curl http://localhost:3003/health`
+- `docs/screenshots/service-notification-health.png` -> `curl http://localhost:3004/health`
+- `docs/screenshots/service-rating-health.png` -> `curl http://localhost:3005/health`
+- `docs/screenshots/service-auth-health.png` -> `curl http://localhost:3006/health`
+
 ### Kubernetes
 
-- Screenshot: `kubectl get pods -o wide`
+- Screenshot: `kubectl get pods`
 - Screenshot: `kubectl get svc`
 - Screenshot: `kubectl get pvc`
 - Screenshot: `kubectl get hpa`
 - Screenshot: `rg -n "readinessProbe|livenessProbe" k8s/*.yaml k8s/trip/*.yaml` (probe coverage proof)
+
+Committed image mapping:
+
+- `docs/screenshots/evidence-kubectl-get-pods.png` -> `kubectl get pods`
+- `docs/screenshots/evidence-kubectl-get-svc.png` -> `kubectl get svc`
+- `docs/screenshots/evidence-k8s-probes-check.png` -> probe grep output across manifests
 
 ### End-to-End Flow
 
@@ -433,6 +450,30 @@ Expected annotations in screenshots:
 - Payment status shown as `COMPLETED` or equivalent paid state
 - Fare amount visible in trip/payment response
 
+Sample request/response evidence (text, not image-only):
+
+```bash
+# Create rider
+curl -X POST http://localhost:3001/v1/riders -H "Content-Type: application/json" -d '{"name":"Demo Rider","email":"demo.rider@example.com","phone":"9000000010","city":"Bangalore"}'
+# -> {"id":3,"name":"Demo Rider","email":"demo.rider@example.com","phone":"9000000010","city":"Bangalore", ...}
+
+# Create driver
+curl -X POST http://localhost:3002/v1/drivers -H "Content-Type: application/json" -d '{"id":2201,"name":"Demo Driver","phone":"9111111110","email":"demo.driver@example.com","vehicle_type":"Sedan","vehicle_plate":"KA01ZZ2201","is_active":true,"city":"Bangalore"}'
+# -> {"id":2201,"is_active":true, ...}
+
+# Create trip
+curl -X POST http://localhost:3000/v1/trips -H "Content-Type: application/json" -d '{"rider_id":3,"pickup_location":"BTM","drop_location":"HSR","city":"Bangalore","distance_km":8}'
+# -> {"id":3,"trip_status":"REQUESTED", ...}
+
+# Accept trip
+curl -X POST http://localhost:3000/v1/trips/3/accept -H "Content-Type: application/json" -d '{"driver_id":2201}'
+# -> {"id":3,"trip_status":"ACCEPTED","driver_id":2201, ...}
+
+# Complete trip
+curl -X POST http://localhost:3000/v1/trips/3/complete
+# -> {"trip":{"id":3,"trip_status":"COMPLETED","payment_status":"PAID","fare_amount":120}, ...}
+```
+
 ### Metrics
 
 - Screenshot command and snippet:
@@ -453,6 +494,10 @@ Expected annotations in screenshots:
   - `path`
   - `statusCode`
   - `durationMs`
+
+Committed log evidence mapping:
+
+- `docs/screenshots/evidence-logs-notification-json.png` -> `kubectl logs deployment/notification --since=10m` (fallback `docker logs notification --tail 120`)
 
 ---
 

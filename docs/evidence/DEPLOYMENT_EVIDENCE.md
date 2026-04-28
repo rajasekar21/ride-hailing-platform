@@ -30,19 +30,32 @@ Paste key output summary:
   - `prometheus`
   - `grafana`
 
+Exact screenshot mapping:
+
+- `docs/screenshots/evidence-docker-ps.png` -> `docker ps`
+- `docs/screenshots/service-user-health.png` -> `curl http://localhost:3001/health`
+- `docs/screenshots/service-driver-health.png` -> `curl http://localhost:3002/health`
+- `docs/screenshots/service-ride-health.png` -> `curl http://localhost:3000/health`
+- `docs/screenshots/service-payment-health.png` -> `curl http://localhost:3003/health`
+- `docs/screenshots/service-notification-health.png` -> `curl http://localhost:3004/health`
+- `docs/screenshots/service-rating-health.png` -> `curl http://localhost:3005/health`
+- `docs/screenshots/service-auth-health.png` -> `curl http://localhost:3006/health`
+
 ## 2) Kubernetes Evidence
 
 Commands:
 
 ```bash
-kubectl get pods -o wide
+kubectl get pods
 kubectl get svc
+rg -n "readinessProbe|livenessProbe" k8s/*.yaml k8s/trip/*.yaml
 ```
 
 Screenshots:
 
 - `docs/screenshots/evidence-kubectl-get-pods.png`
 - `docs/screenshots/evidence-kubectl-get-svc.png`
+- `docs/screenshots/evidence-k8s-probes-check.png`
 
 Paste key output summary:
 
@@ -76,6 +89,30 @@ Notes:
   - Follow-up trip read showed `payment_status: PAID`
   - Final rating created: `rating: 5` for `trip_id: 356`
 
+Sample text responses (reviewer-friendly, not image-only):
+
+```bash
+# Create rider
+curl -X POST http://localhost:3001/v1/riders -H "Content-Type: application/json" -d '{"name":"Demo Rider","email":"demo.rider@example.com","phone":"9000000010","city":"Bangalore"}'
+# -> {"id":3,"name":"Demo Rider","email":"demo.rider@example.com", ...}
+
+# Create driver
+curl -X POST http://localhost:3002/v1/drivers -H "Content-Type: application/json" -d '{"id":2201,"name":"Demo Driver","phone":"9111111110","email":"demo.driver@example.com","vehicle_type":"Sedan","vehicle_plate":"KA01ZZ2201","is_active":true,"city":"Bangalore"}'
+# -> {"id":2201,"is_active":true, ...}
+
+# Create trip
+curl -X POST http://localhost:3000/v1/trips -H "Content-Type: application/json" -d '{"rider_id":3,"pickup_location":"BTM","drop_location":"HSR","city":"Bangalore","distance_km":8}'
+# -> {"id":3,"trip_status":"REQUESTED", ...}
+
+# Accept trip
+curl -X POST http://localhost:3000/v1/trips/3/accept -H "Content-Type: application/json" -d '{"driver_id":2201}'
+# -> {"id":3,"trip_status":"ACCEPTED","driver_id":2201, ...}
+
+# Complete trip
+curl -X POST http://localhost:3000/v1/trips/3/complete
+# -> {"trip":{"id":3,"trip_status":"COMPLETED","payment_status":"PAID","fare_amount":120}, ...}
+```
+
 ## 4) Metrics and Logs Evidence
 
 Screenshots:
@@ -83,6 +120,7 @@ Screenshots:
 - `docs/screenshots/evidence-metrics-ride.png`
 - `docs/screenshots/evidence-metrics-payment.png`
 - `docs/screenshots/evidence-metrics-rating.png`
+- `docs/screenshots/evidence-logs-notification-json.png`
 
 Recommended commands:
 
