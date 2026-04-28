@@ -19,6 +19,18 @@ spec:
             memory: "256Mi"
         imagePullPolicy: Never
         ports: [{containerPort: 3000}]
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
         env:
         - name: JWT_SECRET
           valueFrom:
