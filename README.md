@@ -300,6 +300,22 @@ Example validated URLs in one run:
 
 ---
 
+# 📚 Documentation Artifacts
+
+To address submission feedback gaps, a dedicated docs pack is now added:
+
+- `docs/README.md`
+- `docs/api/API_DOCUMENTATION.md` (Postman/OpenAPI guidance)
+- `docs/architecture/ER_DATA_MODEL.md` (data model + ER diagram placeholder)
+- `docs/evidence/DEPLOYMENT_EVIDENCE.md` (docker/k8s/api/metrics evidence checklist)
+- `docs/screenshots/README.md` (service/evidence screenshot naming checklist)
+
+Store all service and evidence screenshots under:
+
+- `docs/screenshots/`
+
+---
+
 # 🧪 API Endpoints
 
 ## User Service
@@ -534,6 +550,25 @@ curl -X POST http://<MINIKUBE_IP>:30302/login \
 * Horizontal scaling (HPA)
 * Distributed data management
 * Real-time simulation
+
+---
+
+# 🗣️ Project Story (Human Touch)
+
+This project evolved through multiple validation rounds, not a single-pass build.  
+We refined metric names to match rubric wording exactly, fixed schema mismatches between runtime models and seed scripts, and stabilized the end-to-end flow so rating remains the final business step after payment confirmation.
+
+## Challenges We Faced
+
+- Minikube on Windows (Docker driver) required service URL tunneling for reliable host access.
+- Payment metrics initially had conflicting endpoint behavior and needed consolidation.
+- Auth + seeded data had to be aligned (`password`, `role`) to keep demo flows reproducible.
+
+## What We Would Improve Next
+
+- Add full OpenAPI spec generation from service code.
+- Add richer ER diagrams with versioned schema snapshots.
+- Add automated evidence capture scripts for repeatable submission screenshots.
 
 ---
 

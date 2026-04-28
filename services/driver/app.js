@@ -53,7 +53,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/v1/drivers", async (req, res) => {
+const v1Router = express.Router();
+
+v1Router.get("/drivers", async (req, res) => {
   const where = {};
   if (req.query.active === "true") {
     where.is_active = true;
@@ -62,7 +64,7 @@ app.get("/v1/drivers", async (req, res) => {
   res.send(drivers);
 });
 
-app.get("/v1/drivers/:id", async (req, res) => {
+v1Router.get("/drivers/:id", async (req, res) => {
   const driver = await Driver.findByPk(req.params.id);
   if (!driver) {
     return res.status(404).send({ error: "Driver not found" });
@@ -70,7 +72,7 @@ app.get("/v1/drivers/:id", async (req, res) => {
   res.send(driver);
 });
 
-app.post("/v1/drivers", async (req, res) => {
+v1Router.post("/drivers", async (req, res) => {
   try {
     const { id, name, phone, email, vehicle_type, vehicle_plate, is_active, city, password, role } = req.body;
     if (!id || !name || !email || !password) {
@@ -95,7 +97,7 @@ app.post("/v1/drivers", async (req, res) => {
   }
 });
 
-app.patch("/v1/drivers/:id/status", async (req, res) => {
+v1Router.patch("/drivers/:id/status", async (req, res) => {
   const driver = await Driver.findByPk(req.params.id);
   if (!driver) {
     return res.status(404).send({ error: "Driver not found" });
@@ -107,6 +109,8 @@ app.patch("/v1/drivers/:id/status", async (req, res) => {
   await driver.update({ is_active: isActive });
   res.send(driver);
 });
+
+app.use("/v1", v1Router);
 
 app.get("/health", (req, res) => res.send("OK"));
 

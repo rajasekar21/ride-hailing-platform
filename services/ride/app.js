@@ -134,7 +134,9 @@ function calculateFare(distance, surge, baseFare) {
   return Math.round((baseFare + distance * ratePerKm * surge) * 100) / 100;
 }
 
-app.post("/v1/trips", verifyToken, async (req, res) => {
+const v1Router = express.Router();
+
+v1Router.post("/trips", verifyToken, async (req, res) => {
   try {
     const { rider_id, pickup_location, drop_location, city, distance_km, surge_multiplier = 1.0, base_fare = 50.0 } = req.body;
     if (!rider_id || !pickup_location || !drop_location || !city || typeof distance_km !== "number") {
@@ -164,12 +166,12 @@ app.post("/v1/trips", verifyToken, async (req, res) => {
   }
 });
 
-app.get("/v1/trips", async (req, res) => {
+v1Router.get("/trips", async (req, res) => {
   const trips = await Trip.findAll();
   res.send(trips);
 });
 
-app.get("/v1/trips/:id", async (req, res) => {
+v1Router.get("/trips/:id", async (req, res) => {
   const trip = await Trip.findByPk(req.params.id);
   if (!trip) {
     return res.status(404).send({ error: "Trip not found" });
@@ -177,7 +179,7 @@ app.get("/v1/trips/:id", async (req, res) => {
   res.send(trip);
 });
 
-app.post("/v1/trips/:id/accept", async (req, res) => {
+v1Router.post("/trips/:id/accept", async (req, res) => {
   try {
     const trip = await Trip.findByPk(req.params.id);
     if (!trip) {
@@ -207,7 +209,7 @@ app.post("/v1/trips/:id/accept", async (req, res) => {
   }
 });
 
-app.post("/v1/trips/:id/complete", async (req, res) => {
+v1Router.post("/trips/:id/complete", async (req, res) => {
   let trip;
   try {
     trip = await Trip.findByPk(req.params.id);
@@ -283,7 +285,7 @@ app.post("/v1/trips/:id/complete", async (req, res) => {
   }
 });
 
-app.post("/v1/trips/:id/cancel", async (req, res) => {
+v1Router.post("/trips/:id/cancel", async (req, res) => {
   try {
     const trip = await Trip.findByPk(req.params.id);
     if (!trip) {
@@ -313,31 +315,11 @@ app.post("/v1/trips/:id/cancel", async (req, res) => {
   }
 });
 
-app.get("/rides", async (req, res) => {
-  const trips = await Trip.findAll();
-  res.send(trips);
-});
-
-app.post("/rides", async (req, res) => {
-  const trip = await Trip.create({
-    rider_id: req.body.rider_id || 1,
-    pickup_location: req.body.pickup_location || "Unknown pickup",
-    drop_location: req.body.drop_location || "Unknown drop",
-    city: req.body.city || "Unknown",
-    distance_km: req.body.distance_km || 5,
-    surge_multiplier: req.body.surge_multiplier || 1.0,
-    base_fare: req.body.base_fare || 50,
-    trip_status: "REQUESTED",
-    requested_at: new Date().toISOString()
-  });
-  res.status(201).send(trip);
-});
-
 app.get("/health", (req, res) => {
   res.send("OK");
 });
 
-app.patch("/v1/trips/:id/payment-status", async (req, res) => {
+v1Router.patch("/trips/:id/payment-status", async (req, res) => {
   const { status } = req.body;
   if (!status) {
     return res.status(400).send({ error: "status is required" });
@@ -350,6 +332,8 @@ app.patch("/v1/trips/:id/payment-status", async (req, res) => {
   await trip.save();
   res.send(trip);
 });
+
+app.use("/v1", v1Router);
 
 app.get("/metrics", async (req, res) => {
   const completedRatings = await Trip.count({ where: { trip_status: "COMPLETED" } });

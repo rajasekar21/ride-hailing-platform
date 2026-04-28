@@ -43,7 +43,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post("/v1/riders", async (req, res) => {
+const v1Router = express.Router();
+
+v1Router.post("/riders", async (req, res) => {
   try {
     const { name, email, phone, city, password, role } = req.body;
     if (!name || !email || !password) {
@@ -64,7 +66,7 @@ app.post("/v1/riders", async (req, res) => {
   }
 });
 
-app.get("/v1/riders", async (req, res) => {
+v1Router.get("/riders", async (req, res) => {
   const { email } = req.query;
   let riders;
   if (email) {
@@ -75,7 +77,7 @@ app.get("/v1/riders", async (req, res) => {
   res.send(riders);
 });
 
-app.get("/v1/riders/:id", async (req, res) => {
+v1Router.get("/riders/:id", async (req, res) => {
   const rider = await Rider.findByPk(req.params.id);
   if (!rider) {
     return res.status(404).send({ error: "Rider not found" });
@@ -83,7 +85,7 @@ app.get("/v1/riders/:id", async (req, res) => {
   res.send(rider);
 });
 
-app.put("/v1/riders/:id", async (req, res) => {
+v1Router.put("/riders/:id", async (req, res) => {
   const rider = await Rider.findByPk(req.params.id);
   if (!rider) {
     return res.status(404).send({ error: "Rider not found" });
@@ -92,7 +94,7 @@ app.put("/v1/riders/:id", async (req, res) => {
   res.send(rider);
 });
 
-app.delete("/v1/riders/:id", async (req, res) => {
+v1Router.delete("/riders/:id", async (req, res) => {
   const rider = await Rider.findByPk(req.params.id);
   if (!rider) {
     return res.status(404).send({ error: "Rider not found" });
@@ -101,22 +103,7 @@ app.delete("/v1/riders/:id", async (req, res) => {
   res.status(204).send();
 });
 
-app.get("/users", async (req, res) => {
-  const riders = await Rider.findAll();
-  res.send(riders);
-});
-
-app.post("/users", async (req, res) => {
-  try {
-    const rider = await Rider.create({
-      ...req.body,
-      created_at: new Date().toISOString()
-    });
-    res.status(201).send(rider);
-  } catch (err) {
-    res.status(500).send({ error: "Failed to create user" });
-  }
-});
+app.use("/v1", v1Router);
 
 app.get("/health", (req, res) => {
   res.send("OK");
