@@ -20,6 +20,8 @@ const Driver = db.define("Driver", {
   vehicle_plate: DataTypes.STRING,
   is_active: DataTypes.BOOLEAN,
   city: DataTypes.STRING,
+  password: DataTypes.STRING,
+  role: { type: DataTypes.STRING, defaultValue: 'driver' },
   created_at: DataTypes.STRING
 });
 
@@ -51,15 +53,21 @@ app.get("/v1/drivers/:id", async (req, res) => {
 
 app.post("/v1/drivers", async (req, res) => {
   try {
+    const { id, name, phone, email, vehicle_type, vehicle_plate, is_active, city, password, role } = req.body;
+    if (!id || !name || !email || !password) {
+      return res.status(400).send({ error: "id, name, email, and password are required" });
+    }
     const driver = await Driver.create({
-      id: req.body.id,
-      name: req.body.name,
-      phone: req.body.phone,
-      email: req.body.email,
-      vehicle_type: req.body.vehicle_type,
-      vehicle_plate: req.body.vehicle_plate,
-      is_active: req.body.is_active === true,
-      city: req.body.city,
+      id,
+      name,
+      phone,
+      email,
+      vehicle_type,
+      vehicle_plate,
+      is_active: is_active === true,
+      city,
+      password,
+      role: role || 'driver',
       created_at: new Date().toISOString()
     });
     res.status(201).send(driver);

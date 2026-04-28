@@ -16,6 +16,8 @@ const Rider = db.define("Rider", {
   email: DataTypes.STRING,
   phone: DataTypes.STRING,
   city: DataTypes.STRING,
+  password: DataTypes.STRING, // For demo purposes, plain text
+  role: { type: DataTypes.STRING, defaultValue: 'rider' },
   created_at: DataTypes.STRING
 });
 
@@ -30,15 +32,17 @@ app.use((req, res, next) => {
 
 app.post("/v1/riders", async (req, res) => {
   try {
-    const { name, email, phone, city } = req.body;
-    if (!name || !email) {
-      return res.status(400).send({ error: "name and email are required" });
+    const { name, email, phone, city, password, role } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).send({ error: "name, email, and password are required" });
     }
     const rider = await Rider.create({
       name,
       email,
       phone,
       city,
+      password,
+      role: role || 'rider',
       created_at: new Date().toISOString()
     });
     res.status(201).send(rider);

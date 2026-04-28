@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const amqp = require("amqplib");
 const axios = require("axios");
+const jwt = require("jsonwebtoken");
 const { Sequelize, DataTypes } = require("sequelize");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
@@ -17,6 +18,24 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+
+// Middleware to verify JWT
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send({ error: "Access token required" });
+  }
+  const token = authHeader.substring(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).send({ error: "Invalid token" });
+  }
+};
 
 const db = new Sequelize({
   dialect: "sqlite",
@@ -89,7 +108,7 @@ function calculateFare(distance, surge, baseFare) {
   return Math.round((baseFare + distance * ratePerKm * surge) * 100) / 100;
 }
 
-app.post("/v1/trips", async (req, res) => {
+app.post("/v1/trips", verifyToken, async (req, res) => {
   try {
     const { rider_id, pickup_location, drop_location, city, distance_km, surge_multiplier = 1.0, base_fare = 50.0 } = req.body;
     if (!rider_id || !pickup_location || !drop_location || !city || typeof distance_km !== "number") {
