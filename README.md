@@ -475,7 +475,7 @@ kubectl autoscale deployment ride \
 ## Generate Load
 
 ```bash
-while true; do curl -X POST http://<IP>:30000/rides; done
+while true; do curl -X POST http://<IP>:30000/v1/trips; done
 ```
 
 ## Monitor
@@ -497,12 +497,22 @@ GET /metrics
 
 Example:
 
-```json
-{
-  "cpu": 45.2,
-  "memory": 60.1,
-  "requests": 120
-}
+```text
+# HELP trips_requested_total Total number of trips requested
+# TYPE trips_requested_total counter
+trips_requested_total 5
+
+# HELP trips_completed_total Total number of trips completed
+# TYPE trips_completed_total counter
+trips_completed_total 3
+
+# HELP payments_failed_total Total number of failed payment operations
+# TYPE payments_failed_total counter
+payments_failed_total 0
+
+# HELP avg_driver_rating Rolling average of driver ratings
+# TYPE avg_driver_rating gauge
+avg_driver_rating 4.8
 ```
 
 ---
@@ -653,9 +663,9 @@ We refined metric names to match rubric wording exactly, fixed schema mismatches
 
 ## What We Would Improve Next
 
-- Add full OpenAPI spec generation from service code.
+- Publish an interactive Swagger UI page from the generated OpenAPI spec.
 - Add richer ER diagrams with versioned schema snapshots.
-- Add automated evidence capture scripts for repeatable submission screenshots.
+- Add a single-command PDF evidence export bundling screenshots and logs.
 
 ---
 
