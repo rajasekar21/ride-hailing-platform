@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "record:guided": "node record-workflow-guided.js",
+    "record:fast": "node record-workflow.js",
+    "capture:screenshots": "node capture-required-screenshots.js"
   },
   "keywords": [],
   "author": "",
