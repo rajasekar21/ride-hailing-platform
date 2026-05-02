@@ -5,9 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 if docker compose version >/dev/null 2>&1; then
-  COMPOSE=(docker compose)
+  COMPOSE=(docker compose --ansi never)
 elif command -v docker-compose >/dev/null 2>&1; then
-  COMPOSE=(docker-compose)
+  COMPOSE=(docker-compose --ansi never)
 else
   echo "Docker Compose is required." >&2
   exit 1
@@ -15,6 +15,8 @@ fi
 
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
+mkdir -p logs
+compose_log="logs/codespace-validate-compose.log"
 
 request() {
   local method="$1"
@@ -64,12 +66,18 @@ wait_for_http() {
   done
   echo "FAILED: $label did not become ready at $url" >&2
   "${COMPOSE[@]}" ps >&2 || true
+  "${COMPOSE[@]}" logs --no-color --tail=120 user driver ride payment notification rating auth >&2 || true
   exit 1
 }
 
-echo "Building and starting the full ride-hailing stack..."
-"${COMPOSE[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
-"${COMPOSE[@]}" up -d --build
+if [[ "${SKIP_DEPLOY:-0}" != "1" ]]; then
+  echo "Building and starting the full ride-hailing stack..."
+  echo "Compose output is being written to $compose_log"
+  "${COMPOSE[@]}" down -v --remove-orphans >>"$compose_log" 2>&1 || true
+  "${COMPOSE[@]}" up -d --build --quiet-pull --remove-orphans >>"$compose_log" 2>&1
+else
+  echo "Skipping deployment because SKIP_DEPLOY=1"
+fi
 
 wait_for_http "http://localhost:3001/health" "user service"
 wait_for_http "http://localhost:3002/health" "driver service"
