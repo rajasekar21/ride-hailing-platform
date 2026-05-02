@@ -2,9 +2,13 @@ import axios from "axios";
 
 const getCodespaceServiceUrl = (port) => {
   const host = window.location.hostname;
-  const match = host.match(/^(.*)-\d+\.app\.github\.dev$/);
-  if (match) {
-    return `${window.location.protocol}//${match[1]}-${port}.app.github.dev`;
+  const forwardedHostMatch = host.match(/^(.*)-\d+\.app\.github\.dev$/);
+  if (forwardedHostMatch) {
+    return `${window.location.protocol}//${forwardedHostMatch[1]}-${port}.app.github.dev`;
+  }
+  const codespaceHostMatch = host.match(/^(.*)\.github\.dev$/);
+  if (codespaceHostMatch) {
+    return `${window.location.protocol}//${codespaceHostMatch[1]}-${port}.app.github.dev`;
   }
   return `${window.location.protocol}//${host}:${port}`;
 };
