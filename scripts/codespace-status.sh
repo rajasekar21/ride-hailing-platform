@@ -18,6 +18,8 @@ fi
 echo
 echo "Health checks:"
 
+down_services=()
+
 check() {
   local name="$1"
   local url="$2"
@@ -25,6 +27,7 @@ check() {
     printf "  %-14s OK     %s\n" "$name" "$url"
   else
     printf "  %-14s DOWN   %s\n" "$name" "$url"
+    down_services+=("$name")
   fi
 }
 
@@ -38,3 +41,23 @@ check "auth" "http://localhost:3006/health"
 check "frontend" "http://localhost:5173"
 check "prometheus" "http://localhost:9090/-/ready"
 check "grafana" "http://localhost:3007/api/health"
+
+if [[ "${#down_services[@]}" -gt 0 ]]; then
+  echo
+  echo "Recent logs for DOWN services:"
+  for service in "${down_services[@]}"; do
+    case "$service" in
+      frontend|prometheus|grafana)
+        continue
+        ;;
+    esac
+    echo
+    echo "----- $service -----"
+    "${COMPOSE[@]}" logs --no-color --tail=60 "$service" || true
+  done
+
+  echo
+  echo "Next useful commands:"
+  echo "  ./scripts/codespace-logs.sh --follow ${down_services[*]}"
+  echo "  ./scripts/codespace-start.sh --reset"
+fi
