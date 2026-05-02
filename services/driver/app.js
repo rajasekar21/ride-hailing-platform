@@ -134,6 +134,8 @@ app.get("/metrics", async (req, res) => {
   res.end(await register.metrics());
 });
 
-app.listen(3000, () => {
-  logger.info({ service: "driver", port: 3000 }, "service started");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  logger.info({ service: "driver", port: PORT }, "service started");
 });

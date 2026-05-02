@@ -48,6 +48,7 @@ async function seed() {
     .on("end", async () => {
       await Driver.bulkCreate(results, { ignoreDuplicates: true });
       console.log(`✅ Seeded ${results.length} drivers`);
+      await db.close();
     });
 }
 

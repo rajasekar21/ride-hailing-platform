@@ -283,6 +283,9 @@ v1Router.post("/trips/:id/complete", async (req, res) => {
     trip.fare_amount = fare;
     trip.completed_at = new Date().toISOString();
     trip.base_fare = 20;
+    setTripStatus(trip, "COMPLETED");
+    await trip.save();
+
     const paymentResponse = await axios.post(`${PAYMENT_SERVICE_URL}/v1/payments/charge`, {
       trip_id: trip.id,
       amount: fare,
@@ -297,7 +300,6 @@ v1Router.post("/trips/:id/complete", async (req, res) => {
       }
     });
 
-    setTripStatus(trip, "COMPLETED");
     trip.payment_status = paymentResponse.data.status || "COMPLETED";
     await trip.save();
 
@@ -433,6 +435,8 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(3000, () => {
-  logger.info({ service: "ride", port: 3000 }, "service started");
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+  logger.info({ service: "ride", port: PORT }, "service started");
 });

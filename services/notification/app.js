@@ -85,8 +85,10 @@ async function startNotificationConsumer() {
   }
 }
 
-app.listen(3000, () => {
-  logger.info({ service: "notification", port: 3000 }, "service started");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  logger.info({ service: "notification", port: PORT }, "service started");
   startNotificationConsumer().catch((err) => {
     logger.info({ event: "notification_consumer_start_failed", error: err.message }, "notification consumer start failed");
   });

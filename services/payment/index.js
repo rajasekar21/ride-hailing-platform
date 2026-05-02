@@ -295,8 +295,10 @@ async function startPaymentConsumer() {
   }
 }
 
-app.listen(3000, () => {
-  logger.info({ service: "payment", port: 3000 }, "service started");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  logger.info({ service: "payment", port: PORT }, "service started");
   startPaymentConsumer().catch((err) => {
     logger.info({ event: "payment_consumer_start_failed", error: err.message }, "payment consumer start failed");
   });

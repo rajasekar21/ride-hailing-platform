@@ -1,0 +1,25 @@
+{
+  "name": "Ride Hailing Platform",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "dockerDashComposeVersion": "v2"
+    }
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y curl jq",
+  "forwardPorts": [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 5173, 9090, 15672],
+  "portsAttributes": {
+    "3000": { "label": "Ride service" },
+    "3001": { "label": "User service" },
+    "3002": { "label": "Driver service" },
+    "3003": { "label": "Payment service" },
+    "3004": { "label": "Notification service" },
+    "3005": { "label": "Rating service" },
+    "3006": { "label": "Auth service" },
+    "5173": { "label": "Frontend" },
+    "9090": { "label": "Prometheus" },
+    "3007": { "label": "Grafana" },
+    "15672": { "label": "RabbitMQ management" }
+  }
+}
