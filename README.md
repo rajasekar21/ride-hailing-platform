@@ -19,6 +19,11 @@ Implemented services:
 - `services/rating` (post-trip rating)
 - `services/auth` (JWT login)
 
+Deployment source of truth:
+
+- Docker Compose builds backend services from the standalone service repositories listed below.
+- The in-repo `services/*` folders are retained as reference copies for assignment review, but cloud deployment should use the standalone repositories.
+
 ## Architecture & Data Design
 
 - Microservices architecture with loose coupling.
