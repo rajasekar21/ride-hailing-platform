@@ -45,6 +45,7 @@ async function seed() {
     .on("end", async () => {
       await Payment.bulkCreate(results, { ignoreDuplicates: true });
       console.log(`✅ Seeded ${results.length} payments`);
+      await db.close();
     });
 }
 

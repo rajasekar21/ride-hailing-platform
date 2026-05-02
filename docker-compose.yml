@@ -9,7 +9,9 @@ services:
       - "15672:15672"
 
   user:
-    build: ./services/user
+    build:
+      context: ./services
+      dockerfile: user/Dockerfile
     container_name: user
     environment:
       - DB_PATH=/data/users.db
@@ -22,7 +24,9 @@ services:
       - "3001:3000"
 
   driver:
-    build: ./services/driver
+    build:
+      context: ./services
+      dockerfile: driver/Dockerfile
     container_name: driver
     environment:
       - DB_PATH=/data/drivers.db
@@ -35,7 +39,9 @@ services:
       - "3002:3000"
 
   ride:
-    build: ./services/ride
+    build:
+      context: ./services
+      dockerfile: ride/Dockerfile
     container_name: ride
     environment:
       - DB_PATH=/data/rides.db
@@ -60,7 +66,9 @@ services:
       - "3000:3000"
 
   payment:
-    build: ./services/payment
+    build:
+      context: ./services
+      dockerfile: payment/Dockerfile
     container_name: payment
     environment:
       - DB_PATH=/data/payments.db
@@ -79,7 +87,9 @@ services:
       - "3003:3000"
 
   rating:
-    build: ./services/rating
+    build:
+      context: ./services
+      dockerfile: rating/Dockerfile
     container_name: rating
     environment:
       - DB_PATH=/data/ratings.db
@@ -95,7 +105,9 @@ services:
       - "3005:3000"
 
   notification:
-    build: ./services/notification
+    build:
+      context: ./services
+      dockerfile: notification/Dockerfile
     container_name: notification
     environment:
       - RABBITMQ_URL=amqp://rabbitmq:5672
@@ -107,7 +119,9 @@ services:
       - "3004:3000"
 
   auth:
-    build: ./services/auth
+    build:
+      context: ./services
+      dockerfile: auth/Dockerfile
     container_name: auth
     environment:
       - JWT_SECRET=ILoveIndia
