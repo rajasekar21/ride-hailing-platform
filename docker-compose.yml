@@ -8,8 +8,7 @@ services:
 
   user:
     build:
-      context: ./services
-      dockerfile: user/Dockerfile
+      context: https://github.com/rajasekar21/ride-hailing-user-service.git#master
     container_name: user
     environment:
       - DB_PATH=/data/users.db
@@ -23,8 +22,7 @@ services:
 
   driver:
     build:
-      context: ./services
-      dockerfile: driver/Dockerfile
+      context: https://github.com/rajasekar21/ride-hailing-driver-service.git#master
     container_name: driver
     environment:
       - DB_PATH=/data/drivers.db
@@ -38,8 +36,7 @@ services:
 
   ride:
     build:
-      context: ./services
-      dockerfile: ride/Dockerfile
+      context: https://github.com/rajasekar21/ride-hailing-trip-service.git#master
     container_name: ride
     environment:
       - DB_PATH=/data/rides.db
@@ -65,8 +62,7 @@ services:
 
   payment:
     build:
-      context: ./services
-      dockerfile: payment/Dockerfile
+      context: https://github.com/rajasekar21/ride-hailing-payment-service.git#master
     container_name: payment
     environment:
       - DB_PATH=/data/payments.db
@@ -86,8 +82,7 @@ services:
 
   rating:
     build:
-      context: ./services
-      dockerfile: rating/Dockerfile
+      context: https://github.com/rajasekar21/ride-hailing-rating-service.git#master
     container_name: rating
     environment:
       - DB_PATH=/data/ratings.db
@@ -104,8 +99,7 @@ services:
 
   notification:
     build:
-      context: ./services
-      dockerfile: notification/Dockerfile
+      context: https://github.com/rajasekar21/ride-hailing-notification-service.git#master
     container_name: notification
     environment:
       - RABBITMQ_URL=amqp://rabbitmq:5672
@@ -118,8 +112,7 @@ services:
 
   auth:
     build:
-      context: ./services
-      dockerfile: auth/Dockerfile
+      context: https://github.com/rajasekar21/ride-hailing-auth-service.git#master
     container_name: auth
     environment:
       - JWT_SECRET=ILoveIndia
