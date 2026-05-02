@@ -14,9 +14,24 @@ else
 fi
 
 reset=false
-if [[ "${1:-}" == "--reset" ]]; then
-  reset=true
-fi
+no_cache=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --reset)
+      reset=true
+      shift
+      ;;
+    --no-cache)
+      no_cache=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      echo "Usage: $0 [--reset] [--no-cache]" >&2
+      exit 1
+      ;;
+  esac
+done
 
 mkdir -p logs
 log_file="logs/codespace-start.log"
@@ -28,7 +43,12 @@ log_file="logs/codespace-start.log"
     "${COMPOSE[@]}" down -v --remove-orphans || true
   fi
   echo "[$(date -Is)] Building and starting containers"
-  "${COMPOSE[@]}" up -d --build --quiet-pull --remove-orphans
+  if [[ "$no_cache" == true ]]; then
+    "${COMPOSE[@]}" build --no-cache --quiet
+    "${COMPOSE[@]}" up -d --no-build --remove-orphans
+  else
+    "${COMPOSE[@]}" up -d --build --quiet-pull --remove-orphans
+  fi
   echo "[$(date -Is)] Startup command finished"
   "${COMPOSE[@]}" ps
 } >"$log_file" 2>&1 &
