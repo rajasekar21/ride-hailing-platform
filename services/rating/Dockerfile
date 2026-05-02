@@ -5,11 +5,10 @@ ENV npm_config_build_from_source=true \
     npm_config_audit=false
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY shared/package*.json ./shared/
-COPY shared ./shared
-WORKDIR /app/shared
+COPY shared/package*.json ./
 RUN npm install
-WORKDIR /app
+COPY shared ./shared
+RUN node -e "require.resolve('prom-client', { paths: ['/app/shared'] })"
 COPY rating/package*.json ./rating/
 WORKDIR /app/rating
 RUN npm install
