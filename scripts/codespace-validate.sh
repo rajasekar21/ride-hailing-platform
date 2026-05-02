@@ -64,6 +64,7 @@ wait_for_http() {
   done
   echo "FAILED: $label did not become ready at $url" >&2
   "${COMPOSE[@]}" ps >&2 || true
+  "${COMPOSE[@]}" logs --no-color --tail=120 user driver ride payment notification rating auth >&2 || true
   exit 1
 }
 
