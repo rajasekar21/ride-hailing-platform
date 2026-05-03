@@ -171,6 +171,7 @@ Primary docs:
 
 - `docs/README.md`
 - `docs/SUBMISSION_RECORDING_GUIDE.md`
+- `scripts/README.md`
 - `docs/api/API_DOCUMENTATION.md`
 - `docs/api/postman_collection.json`
 - `docs/api/openapi.json`

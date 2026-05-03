@@ -14,8 +14,7 @@ Command:
 
 ```bash
 docker compose ps
-./scripts/codespace-status.sh
-SKIP_DEPLOY=1 ./scripts/codespace-validate.sh
+SKIP_DEPLOY=1 ./scripts/compose-validate.sh
 ```
 
 Screenshot:
@@ -38,8 +37,8 @@ Paste key output summary:
   - `rabbitmq`
   - `prometheus`
   - `grafana`
-- `codespace-status.sh` reports OK for ride, user, driver, payment, notification, rating, auth, frontend, prometheus, and grafana.
-- `codespace-validate.sh` passes the full rider -> trip -> driver -> payment -> notification -> rating lifecycle.
+- `compose-validate.sh` reports READY for ride, user, driver, payment, notification, rating, auth, frontend, prometheus, and grafana.
+- `compose-validate.sh` passes the full rider -> trip -> driver -> payment -> notification -> rating lifecycle.
 
 Exact screenshot mapping:
 

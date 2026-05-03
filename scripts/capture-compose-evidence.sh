@@ -37,8 +37,7 @@ This evidence is generated from the current Docker Compose deployment. Use it fo
 EOF
 
 write_cmd "Container Status" docker compose ps
-write_cmd "Service Health Summary" ./scripts/codespace-status.sh
-write_cmd "Full Workflow Validation" env SKIP_DEPLOY=1 ./scripts/codespace-validate.sh
+write_cmd "Full Workflow Validation" env SKIP_DEPLOY=1 ./scripts/compose-validate.sh
 write_cmd "Ride Metrics" curl -fsS http://localhost:3000/metrics
 write_cmd "Payment Metrics" curl -fsS http://localhost:3003/metrics
 write_cmd "Rating Metrics" curl -fsS http://localhost:3005/metrics
@@ -80,8 +79,7 @@ Evidence written to: $out
 
 Recommended screenshots to refresh from this run:
 - docker compose ps
-- ./scripts/codespace-status.sh
-- SKIP_DEPLOY=1 ./scripts/codespace-validate.sh final PASS section
+- SKIP_DEPLOY=1 ./scripts/compose-validate.sh final PASS section
 - Frontend dashboard after hard refresh
 - Latest trip/rider DB persistence proof sections in $out
 EOF
