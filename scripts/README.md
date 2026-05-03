@@ -2,20 +2,19 @@
 
 Primary project path:
 
-- `run-all.sh` - mandatory Minikube end-to-end run. It checks required tools, starts Minikube, builds images, applies Kubernetes manifests, starts port-forwards/frontend, and runs validation.
+- `run-minikube.sh` - mandatory Minikube end-to-end run. It checks required tools, starts Minikube, builds images, deploys manifests, starts port-forwards/frontend, exposes Codespace ports, and validates the workflow.
 
-Minikube substeps used by `run-all.sh`:
+Minikube substeps used by `run-minikube.sh`:
 
-- `setup.sh` - install frontend dependencies only when needed and prepare frontend env.
-- `deploy.sh` - start Minikube and print status.
-- `build.sh` - build service images into the Minikube Docker environment.
-- `apply.sh` - apply Kubernetes manifests.
-- `seed.sh` - disabled host-side seed notice; service images/repos own runtime seeding.
-- `port-forward.sh` - expose service ports locally.
-- `frontend.sh` - start the frontend dev server.
+- `setup-frontend.sh` - install frontend dependencies only when needed and prepare frontend env.
+- `start-minikube.sh` - start Minikube with the Docker driver and print status.
+- `build-minikube-images.sh` - build service images into the Minikube Docker environment.
+- `deploy-k8s-manifests.sh` - apply Kubernetes manifests and wait for rollouts.
+- `forward-minikube-ports.sh` - expose service ports locally.
+- `start-frontend.sh` - start the frontend dev server.
 - `expose-codespace-ports.sh` - when running in GitHub Codespaces, set forwarded port visibility to public.
-- `validate.sh` - validate the full Minikube rider -> trip -> driver -> payment -> notification -> rating workflow.
-- `cleanup.sh` - remove Kubernetes resources.
+- `validate-minikube-workflow.sh` - validate the full Minikube rider -> trip -> driver -> payment -> notification -> rating workflow.
+- `cleanup-minikube.sh` - remove Kubernetes resources and stale port-forwards.
 
 Secondary Docker Compose evidence tools:
 
@@ -24,4 +23,4 @@ Secondary Docker Compose evidence tools:
 
 Recording helper:
 
-- `minikube-recording-commands.sh` - print commands to capture individual Minikube service clips.
+- `print-minikube-recording-commands.sh` - print commands to capture individual Minikube service clips.

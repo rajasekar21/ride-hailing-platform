@@ -134,14 +134,14 @@ jq --version
 
 show_minikube_status
 
-./scripts/setup.sh
-./scripts/deploy.sh
+./scripts/setup-frontend.sh
+./scripts/start-minikube.sh
 show_minikube_status
-./scripts/build.sh
-./scripts/apply.sh
-./scripts/port-forward.sh
-./scripts/frontend.sh
+./scripts/build-minikube-images.sh
+./scripts/deploy-k8s-manifests.sh
+./scripts/forward-minikube-ports.sh
+./scripts/start-frontend.sh
 ./scripts/expose-codespace-ports.sh
-./scripts/validate.sh
+./scripts/validate-minikube-workflow.sh
 
 log "System ready"

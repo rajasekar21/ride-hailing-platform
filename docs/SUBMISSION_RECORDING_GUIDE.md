@@ -16,7 +16,7 @@ Docker Compose integration uses the standalone backend service repositories as t
 
 The platform repo provides Docker Compose orchestration, frontend, Kubernetes manifests, monitoring config, docs, and evidence capture scripts.
 
-Minikube is mandatory for the final project demonstration. Docker Compose remains useful for quick Codespace validation and screenshot backup, but the submitted recording should include the Minikube run from `./scripts/run-all.sh`.
+Minikube is mandatory for the final project demonstration. Docker Compose remains useful for quick Codespace validation and screenshot backup, but the submitted recording should include the Minikube run from `./scripts/run-minikube.sh`.
 
 ## Recommended 10-15 Minute Video Flow
 
@@ -34,7 +34,7 @@ Run:
 
 ```bash
 git pull
-./scripts/run-all.sh
+./scripts/run-minikube.sh
 minikube status
 kubectl get pods -o wide
 kubectl get svc
@@ -50,12 +50,12 @@ Show:
 
 ### 3. Inter-Service Communication: 3-4 minutes
 
-Use the validation and/or curl/Postman flow against the Minikube port-forwards started by `run-all.sh`.
+Use the validation and/or curl/Postman flow against the Minikube port-forwards started by `run-minikube.sh`.
 
 Run:
 
 ```bash
-./scripts/validate.sh
+./scripts/validate-minikube-workflow.sh
 kubectl logs deployment/ride --tail=100
 kubectl logs deployment/payment --tail=100
 kubectl logs deployment/notification --tail=100
@@ -101,7 +101,7 @@ docker compose exec user ls -lh /data
 Use the command pack:
 
 ```bash
-./scripts/minikube-recording-commands.sh
+./scripts/print-minikube-recording-commands.sh
 ```
 
 Record separate short clips for individual services. They do not all need to run simultaneously if the machine cannot handle it.
@@ -152,7 +152,7 @@ Show:
 Refresh these screenshots from the current Minikube run:
 
 - `docs/screenshots/evidence-minikube-status.png`
-- `docs/screenshots/evidence-run-all.png`
+- `docs/screenshots/evidence-run-minikube.png`
 - `docs/screenshots/evidence-kubectl-get-pods.png`
 - `docs/screenshots/evidence-kubectl-get-svc.png`
 - `docs/screenshots/evidence-docker-ps.png`
@@ -174,7 +174,7 @@ Refresh these screenshots from the current Minikube run:
 Before recording:
 
 ```bash
-./scripts/run-all.sh
+./scripts/run-minikube.sh
 minikube status
 kubectl get pods -o wide
 kubectl get svc

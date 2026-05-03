@@ -57,7 +57,7 @@ for port in "${PORTS[@]}"; do
 done
 
 if [[ "$busy" == true ]]; then
-  echo "FAILED: one or more required ports are busy. Stop the listed process and rerun ./scripts/port-forward.sh." >&2
+  echo "FAILED: one or more required ports are busy. Stop the listed process and rerun ./scripts/forward-minikube-ports.sh." >&2
   exit 1
 fi
 
