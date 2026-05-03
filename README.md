@@ -67,6 +67,7 @@ kubectl get svc
 
 Backend Minikube images are built from the standalone service repositories when `git` is available; the in-repo `services/*` folders are only fallback/reference copies.
 Runtime seeding is owned by the service images/repos. The platform runner does not execute `services/*/seed.js` on the host.
+Local `setup.sh` installs frontend dependencies only when `frontend/node_modules` is missing or `frontend/package-lock.json` changes.
 
 In GitHub Codespaces, `run-all.sh` also sets forwarded service ports to public visibility by default. Override with `CODESPACE_PORT_VISIBILITY=private` if needed.
 
