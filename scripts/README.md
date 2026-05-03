@@ -6,7 +6,7 @@ Primary project path:
 
 Minikube substeps used by `run-all.sh`:
 
-- `setup.sh` - install service/frontend dependencies and prepare frontend env.
+- `setup.sh` - install frontend dependencies only when needed and prepare frontend env.
 - `deploy.sh` - start Minikube and print status.
 - `build.sh` - build service images into the Minikube Docker environment.
 - `apply.sh` - apply Kubernetes manifests.
