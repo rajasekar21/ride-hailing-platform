@@ -45,21 +45,9 @@ write_cmd "Rating Metrics" curl -fsS http://localhost:3005/metrics
 write_cmd "Notification Logs" docker compose logs --no-color --tail=120 notification
 
 latest_id_from_json() {
-  node -e '
-    let raw = "";
-    process.stdin.on("data", (chunk) => { raw += chunk; });
-    process.stdin.on("end", () => {
-      try {
-        const parsed = JSON.parse(raw);
-        const rows = Array.isArray(parsed) ? parsed : parsed.data;
-        const last = Array.isArray(rows) ? rows[rows.length - 1] : null;
-        if (last && last.id !== undefined && last.id !== null) {
-          process.stdout.write(String(last.id));
-        }
-      } catch (_) {
-      }
-    });
-  '
+  grep -Eo '"id"[[:space:]]*:[[:space:]]*[0-9]+' \
+    | tail -n 1 \
+    | sed -E 's/.*:[[:space:]]*//'
 }
 
 latest_trip_id="$(curl -fsS http://localhost:3000/v1/trips 2>/dev/null | latest_id_from_json || true)"
