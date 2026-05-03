@@ -42,6 +42,7 @@ function App() {
   const [rating, setRating] = useState(5);
   const [feedback, setFeedback] = useState("Smooth ride.");
   const [message, setMessage] = useState("");
+  const [lastActionResult, setLastActionResult] = useState(null);
   const [warnings, setWarnings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [demoRunning, setDemoRunning] = useState(false);
@@ -105,7 +106,7 @@ function App() {
   const nextPage = pageOrder[Math.min(currentPageIndex + 1, pageOrder.length - 1)];
   const prevPage = pageOrder[Math.max(currentPageIndex - 1, 0)];
 
-  const loadDashboard = async () => {
+  const loadDashboard = async ({ quiet = false } = {}) => {
     const requests = await Promise.allSettled([
       getUsers(),
       getAllDrivers(),
@@ -139,7 +140,7 @@ function App() {
     });
 
     setWarnings(nextWarnings);
-    if (!nextWarnings.length) {
+    if (!quiet && !nextWarnings.length) {
       setMessage("Dashboard synced successfully.");
     }
     setLoading(false);
@@ -175,12 +176,38 @@ function App() {
 
   const onAction = async (actionFn, successMessage) => {
     try {
-      await actionFn();
+      setLastActionResult(null);
+      const res = await actionFn();
+      const data = res?.data ?? null;
+      setLastActionResult(data);
       setMessage(successMessage);
-      await loadDashboard();
+      await loadDashboard({ quiet: true });
+      return data;
     } catch (err) {
-      setMessage(err.response?.data?.error || err.message);
+      const errorPayload = err.response?.data || { error: err.message };
+      setLastActionResult(errorPayload);
+      setMessage(errorPayload.error || err.message);
+      return null;
     }
+  };
+
+  const onCreateRider = async () => {
+    const created = await onAction(() => createUser(riderForm), "Rider created.");
+    if (created?.id) {
+      setRiderLookupId(String(created.id));
+      setRiderUpdate((prev) => ({ ...prev, id: String(created.id) }));
+      setTripForm((prev) => ({ ...prev, rider_id: Number(created.id) }));
+    }
+  };
+
+  const fillDemoRider = () => {
+    const id = Date.now();
+    setRiderForm({
+      name: "Demo Rider",
+      email: `demo.rider.${id}@example.com`,
+      phone: `9${String(id).slice(-9)}`,
+      city: "Bengaluru"
+    });
   };
 
   const onLookupRider = async () => {
@@ -275,6 +302,15 @@ function App() {
           </ul>
         </section>
       )}
+      {lastActionResult && (
+        <section className="card result-panel">
+          <div className="section-header">
+            <h2>Latest API Response</h2>
+            <span className="badge required">Visible proof</span>
+          </div>
+          <pre>{JSON.stringify(lastActionResult, null, 2)}</pre>
+        </section>
+      )}
       <section className="card">
         <div className="section-header">
           <h2>Quick Assignment Demo</h2>
@@ -359,7 +395,8 @@ function App() {
               <input placeholder="Email" value={riderForm.email} onChange={(e) => setRiderForm((p) => ({ ...p, email: e.target.value }))} />
               <input placeholder="Phone" value={riderForm.phone} onChange={(e) => setRiderForm((p) => ({ ...p, phone: e.target.value }))} />
               <input placeholder="City" value={riderForm.city} onChange={(e) => setRiderForm((p) => ({ ...p, city: e.target.value }))} />
-              <button onClick={() => onAction(() => createUser(riderForm), "Rider created.")}>Create Rider</button>
+              <button onClick={fillDemoRider}>Fill Demo Rider</button>
+              <button onClick={onCreateRider}>Create Rider</button>
             </div>
           </div>
           <div>
