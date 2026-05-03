@@ -16,6 +16,8 @@ Docker Compose integration uses the standalone backend service repositories as t
 
 The platform repo provides Docker Compose orchestration, frontend, Kubernetes manifests, monitoring config, docs, and evidence capture scripts.
 
+Minikube is mandatory for the final project demonstration. Docker Compose remains useful for quick Codespace validation and screenshot backup, but the submitted recording should include the Minikube run from `./scripts/run-all.sh`.
+
 ## Recommended 10-15 Minute Video Flow
 
 ### 1. Intro: 1 minute
@@ -26,29 +28,37 @@ Show:
 - Services: auth, user, driver, ride/trip, payment, notification, rating, frontend.
 - Core lifecycle: rider -> trip -> driver -> payment -> notification -> rating.
 
-### 2. Docker Compose Setup: 2-3 minutes
+### 2. Minikube Setup: 2-3 minutes
 
 Run:
 
 ```bash
 git pull
-./scripts/codespace-start.sh --reset --no-cache
-./scripts/codespace-status.sh
-docker compose ps
+./scripts/run-all.sh
+minikube status
+kubectl get pods -o wide
+kubectl get svc
 ```
 
 Show:
 
-- All service containers are running.
-- Health checks are OK.
+- Minikube is running.
+- All service pods are running/ready.
+- Services are discoverable through Kubernetes services.
+- Backend images are built from the standalone service repositories.
 - Frontend is available on port 5173.
 
 ### 3. Inter-Service Communication: 3-4 minutes
 
+Use the validation and/or curl/Postman flow against the Minikube port-forwards started by `run-all.sh`.
+
 Run:
 
 ```bash
-SKIP_DEPLOY=1 ./scripts/codespace-validate.sh
+./scripts/validate.sh
+kubectl logs deployment/ride --tail=100
+kubectl logs deployment/payment --tail=100
+kubectl logs deployment/notification --tail=100
 ```
 
 Show the final PASS lines proving:
@@ -86,7 +96,7 @@ docker compose exec ride ls -lh /data
 docker compose exec user ls -lh /data
 ```
 
-### 5. Minikube Deployment: 3-4 minutes
+### 5. Individual Minikube Service Clips: 3-4 minutes
 
 Use the command pack:
 
@@ -105,7 +115,7 @@ kubectl logs deployment/notification --since=10m
 grep -RniE "readinessProbe|livenessProbe" k8s/*.yaml k8s/trip/*.yaml
 ```
 
-Explain clearly whether the integration flow is being demonstrated on Docker Compose or Minikube. The current recommended integration demo is Docker Compose.
+Explain clearly that the official project demonstration is running on Minikube. Docker Compose evidence may be included only as secondary backup.
 
 ### 6. Monitoring and Logs: 2 minutes
 
@@ -115,7 +125,9 @@ Show:
 curl http://localhost:3000/metrics
 curl http://localhost:3003/metrics
 curl http://localhost:3005/metrics
-docker compose logs --tail=100 ride payment notification
+kubectl logs deployment/ride --tail=100
+kubectl logs deployment/payment --tail=100
+kubectl logs deployment/notification --tail=100
 ```
 
 Point out:
@@ -132,13 +144,17 @@ Show:
 
 - Platform repo URL.
 - Standalone service repo URLs.
-- Mention Docker Compose was used for full integration testing.
-- Mention Minikube was used for individual deployment evidence.
+- Mention Minikube was used for the final project run.
+- Mention Docker Compose was used only as secondary Codespace validation evidence if included.
 
 ## Screenshot Refresh Checklist
 
-Refresh these screenshots from the current Codespace run:
+Refresh these screenshots from the current Minikube run:
 
+- `docs/screenshots/evidence-minikube-status.png`
+- `docs/screenshots/evidence-run-all.png`
+- `docs/screenshots/evidence-kubectl-get-pods.png`
+- `docs/screenshots/evidence-kubectl-get-svc.png`
 - `docs/screenshots/evidence-docker-ps.png`
 - `docs/screenshots/service-frontend-dashboard.png`
 - `docs/screenshots/evidence-api-create-rider.png`
@@ -151,8 +167,6 @@ Refresh these screenshots from the current Codespace run:
 - `docs/screenshots/evidence-metrics-payment.png`
 - `docs/screenshots/evidence-metrics-rating.png`
 - `docs/screenshots/evidence-logs-notification-json.png`
-- `docs/screenshots/evidence-kubectl-get-pods.png`
-- `docs/screenshots/evidence-kubectl-get-svc.png`
 - `docs/screenshots/evidence-k8s-probes-check.png`
 
 ## Final Sanity Commands
@@ -160,7 +174,9 @@ Refresh these screenshots from the current Codespace run:
 Before recording:
 
 ```bash
-./scripts/codespace-status.sh
-SKIP_DEPLOY=1 ./scripts/codespace-validate.sh
+./scripts/run-all.sh
+minikube status
+kubectl get pods -o wide
+kubectl get svc
 ./scripts/capture-compose-evidence.sh
 ```

@@ -1,13 +1,14 @@
-#!/bin/bash
-set -e
-set -x
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "🚀 Starting Minikube..."
+echo "Starting Minikube..."
 
-minikube start --memory=4096 --cpus=2
+minikube start --driver=docker --memory=4096 --cpus=2
 
-echo "🐳 Configuring Docker to use Minikube..."
+echo "Minikube status:"
+minikube status
 
-eval $(minikube docker-env)
+echo "Configuring Docker to use Minikube..."
+eval "$(minikube docker-env)"
 
-echo "✅ Minikube ready"
+echo "Minikube ready"
