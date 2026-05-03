@@ -18,3 +18,5 @@ nohup kubectl port-forward service/auth 3006:3000 > logs/auth-pf.log 2>&1 &
 sleep 5
 
 echo "Port forwarding ready"
+
+./scripts/expose-codespace-ports.sh 3000 3001 3002 3003 3004 3005 3006

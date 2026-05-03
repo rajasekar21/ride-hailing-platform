@@ -13,6 +13,7 @@ Minikube substeps used by `run-all.sh`:
 - `seed.sh` - seed service data when seed scripts exist.
 - `port-forward.sh` - expose service ports locally.
 - `frontend.sh` - start the frontend dev server.
+- `expose-codespace-ports.sh` - when running in GitHub Codespaces, set forwarded port visibility to public.
 - `validate.sh` - validate the full Minikube rider -> trip -> driver -> payment -> notification -> rating workflow.
 - `cleanup.sh` - remove Kubernetes resources.
 

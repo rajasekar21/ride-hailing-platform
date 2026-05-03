@@ -142,6 +142,7 @@ show_minikube_status
 ./scripts/seed.sh
 ./scripts/port-forward.sh
 ./scripts/frontend.sh
+./scripts/expose-codespace-ports.sh
 ./scripts/validate.sh
 
 log "System ready"
