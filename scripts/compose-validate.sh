@@ -16,7 +16,7 @@ fi
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 mkdir -p logs
-compose_log="logs/codespace-validate-compose.log"
+compose_log="logs/compose-validate.log"
 
 request() {
   local method="$1"
