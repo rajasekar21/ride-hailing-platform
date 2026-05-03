@@ -49,6 +49,7 @@ json_value() {
 wait_for_http() {
   local url="$1"
   local label="$2"
+  local log_file="${3:-}"
   for _ in {1..90}; do
     if curl -fsS "$url" >/dev/null 2>&1; then
       echo "READY: $label"
@@ -58,6 +59,11 @@ wait_for_http() {
   done
   echo "FAILED: $label did not become ready at $url" >&2
   kubectl get pods >&2 || true
+  if [[ -n "$log_file" && -f "$log_file" ]]; then
+    echo "Port-forward log for $label:" >&2
+    cat "$log_file" >&2 || true
+  fi
+  kubectl describe deployment "${label%% service}" >&2 || true
   exit 1
 }
 
@@ -70,13 +76,13 @@ if kubectl get pods | grep -E "CrashLoopBackOff|Error|ImagePullBackOff" >/dev/nu
 fi
 echo "PASS: pods are not in failure state"
 
-wait_for_http "http://localhost:3001/health" "user service"
-wait_for_http "http://localhost:3002/health" "driver service"
-wait_for_http "http://localhost:3003/health" "payment service"
-wait_for_http "http://localhost:3004/health" "notification service"
-wait_for_http "http://localhost:3005/health" "rating service"
-wait_for_http "http://localhost:3006/health" "auth service"
-wait_for_http "http://localhost:3000/health" "ride service"
+wait_for_http "http://localhost:3001/health" "user service" "logs/user-pf.log"
+wait_for_http "http://localhost:3002/health" "driver service" "logs/driver-pf.log"
+wait_for_http "http://localhost:3003/health" "payment service" "logs/payment-pf.log"
+wait_for_http "http://localhost:3004/health" "notification service" "logs/notification-pf.log"
+wait_for_http "http://localhost:3005/health" "rating service" "logs/rating-pf.log"
+wait_for_http "http://localhost:3006/health" "auth service" "logs/auth-pf.log"
+wait_for_http "http://localhost:3000/health" "ride service" "logs/ride-pf.log"
 wait_for_http "http://localhost:5173" "frontend"
 
 run_id="$(date +%s)"
