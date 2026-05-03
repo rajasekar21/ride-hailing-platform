@@ -2,17 +2,24 @@
 
 Use this file to capture command outputs and map them to screenshots for final submission.
 
+Current Docker Compose integration builds backend services from the standalone service repositories. The platform repo provides orchestration, frontend, monitoring, Kubernetes manifests, and evidence scripts.
+
+For the final recording sequence, use `docs/SUBMISSION_RECORDING_GUIDE.md`.
+
 ## 1) Docker Evidence
 
 Command:
 
 ```bash
-docker ps
+docker compose ps
+./scripts/codespace-status.sh
+SKIP_DEPLOY=1 ./scripts/codespace-validate.sh
 ```
 
 Screenshot:
 
 - `docs/screenshots/evidence-docker-ps.png`
+- `docs/screenshots/service-frontend-dashboard.png`
 
 Paste key output summary:
 
@@ -29,6 +36,8 @@ Paste key output summary:
   - `rabbitmq`
   - `prometheus`
   - `grafana`
+- `codespace-status.sh` reports OK for ride, user, driver, payment, notification, rating, auth, frontend, prometheus, and grafana.
+- `codespace-validate.sh` passes the full rider -> trip -> driver -> payment -> notification -> rating lifecycle.
 
 Exact screenshot mapping:
 
@@ -40,12 +49,22 @@ Exact screenshot mapping:
 - `docs/screenshots/service-notification-health.png` -> `curl http://localhost:3004/health`
 - `docs/screenshots/service-rating-health.png` -> `curl http://localhost:3005/health`
 - `docs/screenshots/service-auth-health.png` -> `curl http://localhost:3006/health`
+- `docs/screenshots/service-frontend-dashboard.png` -> frontend dashboard with no "Some services are unavailable" warning after hard refresh
+
+Generated text evidence:
+
+```bash
+./scripts/capture-compose-evidence.sh
+```
+
+Save or screenshot the generated file under `docs/evidence/generated/`. It captures `docker compose ps`, health checks, full validation, metrics, notification logs, and persisted-data proof.
 
 ## 2) Kubernetes Evidence
 
 Commands:
 
 ```bash
+./scripts/minikube-recording-commands.sh
 kubectl get pods
 kubectl get svc
 rg -n "readinessProbe|livenessProbe" k8s/*.yaml k8s/trip/*.yaml
@@ -65,6 +84,7 @@ Paste key output summary:
   - NodePort: `user (30301)`, `ride (30300)`, `auth (30302)`
   - Extra NodePort services: `driver-nodeport`, `payment-nodeport`, `rating-nodeport`
   - ClusterIP internals: `driver`, `payment`, `rating`, `notification`, `rabbitmq`
+- Record individual Minikube clips per service when machine resources are limited. For each clip, show pod, service, `/health`, and logs for that service.
 
 ## 3) API Response Evidence (Trip to Rating Flow)
 
@@ -149,7 +169,27 @@ Tip:
 
 - While taking screenshots, keep terminal zoom at 125% and include the exact metric lines above.
 
-## 5) Verified Kubernetes E2E Run (Latest)
+## 5) DB Persisted Data Evidence
+
+Use the generated Compose evidence file after a successful validation run:
+
+```bash
+./scripts/capture-compose-evidence.sh
+```
+
+Required proof:
+
+- Latest rider retrieved with `GET /v1/riders/{id}` after creation.
+- Latest trip retrieved with `GET /v1/trips/{id}` after creation and completion.
+
+Optional container-level proof:
+
+```bash
+docker compose exec user ls -lh /data
+docker compose exec ride ls -lh /data
+```
+
+## 6) Verified Kubernetes E2E Run (Latest)
 
 This section records one full run executed on Minikube service URLs.
 
