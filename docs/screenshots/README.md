@@ -16,7 +16,7 @@ Add screenshots in this folder using the naming convention below.
 ## Evidence Screenshots
 
 - `evidence-docker-ps.png`
-- `evidence-run-all.png`
+- `evidence-run-minikube.png`
 - `evidence-minikube-status.png`
 - `service-frontend-dashboard.png`
 - `evidence-compose-validation-pass.png` (final PASS section from `SKIP_DEPLOY=1 ./scripts/compose-validate.sh`)
@@ -41,7 +41,7 @@ Add screenshots in this folder using the naming convention below.
 - Include timestamp in terminal for evidence screenshots when possible.
 - Use PNG format for clarity.
 - Prefer readable command screenshots: terminal-equivalent captures should use large font (>=20px).
-- Run `./scripts/run-all.sh` first for the mandatory Minikube evidence, then capture `minikube status`, `kubectl get pods -o wide`, and `kubectl get svc`.
+- Run `./scripts/run-minikube.sh` first for the mandatory Minikube evidence, then capture `minikube status`, `kubectl get pods -o wide`, and `kubectl get svc`.
 - Refresh Docker Compose screenshots from the current Codespace run after `docker compose ps` and `SKIP_DEPLOY=1 ./scripts/compose-validate.sh` both pass.
 - Refresh the frontend dashboard screenshot after a browser hard refresh so stale network errors are not shown.
 

@@ -4,7 +4,7 @@ Use this file to capture command outputs and map them to screenshots for final s
 
 Current Docker Compose integration builds backend services from the standalone service repositories. The platform repo provides orchestration, frontend, monitoring, Kubernetes manifests, and evidence scripts.
 
-Minikube is mandatory for the final project demonstration. Use `./scripts/run-all.sh` as the primary execution path. Docker Compose evidence can be kept as secondary Codespace validation evidence.
+Minikube is mandatory for the final project demonstration. Use `./scripts/run-minikube.sh` as the primary execution path. Docker Compose evidence can be kept as secondary Codespace validation evidence.
 
 For the final recording sequence, use `docs/SUBMISSION_RECORDING_GUIDE.md`.
 
@@ -65,9 +65,9 @@ Save or screenshot the generated file under `docs/evidence/generated/`. It captu
 Commands:
 
 ```bash
-./scripts/run-all.sh
+./scripts/run-minikube.sh
 minikube status
-./scripts/minikube-recording-commands.sh
+./scripts/print-minikube-recording-commands.sh
 kubectl get pods
 kubectl get svc
 rg -n "readinessProbe|livenessProbe" k8s/*.yaml k8s/trip/*.yaml
@@ -75,7 +75,7 @@ rg -n "readinessProbe|livenessProbe" k8s/*.yaml k8s/trip/*.yaml
 
 Screenshots:
 
-- `docs/screenshots/evidence-run-all.png`
+- `docs/screenshots/evidence-run-minikube.png`
 - `docs/screenshots/evidence-minikube-status.png`
 - `docs/screenshots/evidence-kubectl-get-pods.png`
 - `docs/screenshots/evidence-kubectl-get-svc.png`
