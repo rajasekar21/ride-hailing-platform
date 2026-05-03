@@ -139,7 +139,6 @@ show_minikube_status
 show_minikube_status
 ./scripts/build.sh
 ./scripts/apply.sh
-./scripts/seed.sh
 ./scripts/port-forward.sh
 ./scripts/frontend.sh
 ./scripts/expose-codespace-ports.sh

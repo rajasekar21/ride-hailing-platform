@@ -10,7 +10,7 @@ Minikube substeps used by `run-all.sh`:
 - `deploy.sh` - start Minikube and print status.
 - `build.sh` - build service images into the Minikube Docker environment.
 - `apply.sh` - apply Kubernetes manifests.
-- `seed.sh` - seed service data when seed scripts exist.
+- `seed.sh` - disabled host-side seed notice; service images/repos own runtime seeding.
 - `port-forward.sh` - expose service ports locally.
 - `frontend.sh` - start the frontend dev server.
 - `expose-codespace-ports.sh` - when running in GitHub Codespaces, set forwarded port visibility to public.
