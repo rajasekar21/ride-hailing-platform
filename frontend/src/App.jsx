@@ -160,16 +160,7 @@ function App() {
 
   useEffect(() => {
     const getSocketServiceUrl = () => {
-      const host = window.location.hostname;
-      const forwardedHostMatch = host.match(/^(.*)-\d+\.app\.github\.dev$/);
-      if (forwardedHostMatch) {
-        return `${window.location.protocol}//${forwardedHostMatch[1]}-3000.app.github.dev`;
-      }
-      const codespaceHostMatch = host.match(/^(.*)\.github\.dev$/);
-      if (codespaceHostMatch) {
-        return `${window.location.protocol}//${codespaceHostMatch[1]}-3000.app.github.dev`;
-      }
-      return `${window.location.protocol}//${host}:3000`;
+      return window.location.origin;
     };
 
     const newSocket = io(getSocketServiceUrl());

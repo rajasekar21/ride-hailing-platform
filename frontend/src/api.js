@@ -1,23 +1,10 @@
 import axios from "axios";
 
-const getCodespaceServiceUrl = (port) => {
-  const host = window.location.hostname;
-  const forwardedHostMatch = host.match(/^(.*)-\d+\.app\.github\.dev$/);
-  if (forwardedHostMatch) {
-    return `${window.location.protocol}//${forwardedHostMatch[1]}-${port}.app.github.dev`;
-  }
-  const codespaceHostMatch = host.match(/^(.*)\.github\.dev$/);
-  if (codespaceHostMatch) {
-    return `${window.location.protocol}//${codespaceHostMatch[1]}-${port}.app.github.dev`;
-  }
-  return `${window.location.protocol}//${host}:${port}`;
-};
-
-const USER_BASE = import.meta.env.VITE_USER_BASE || getCodespaceServiceUrl(3001);
-const RIDE_BASE = import.meta.env.VITE_API_BASE || getCodespaceServiceUrl(3000);
-const DRIVER_BASE = import.meta.env.VITE_DRIVER_BASE || getCodespaceServiceUrl(3002);
-const PAYMENT_BASE = import.meta.env.VITE_PAYMENT_BASE || getCodespaceServiceUrl(3003);
-const RATING_BASE = import.meta.env.VITE_RATING_BASE || getCodespaceServiceUrl(3005);
+const USER_BASE = import.meta.env.VITE_USER_BASE || "/api/user";
+const RIDE_BASE = import.meta.env.VITE_API_BASE || "/api/ride";
+const DRIVER_BASE = import.meta.env.VITE_DRIVER_BASE || "/api/driver";
+const PAYMENT_BASE = import.meta.env.VITE_PAYMENT_BASE || "/api/payment";
+const RATING_BASE = import.meta.env.VITE_RATING_BASE || "/api/rating";
 
 const requestId = () => `demo-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 const traceId = () => `trace-${Date.now()}-${Math.floor(Math.random() * 1000)}`;

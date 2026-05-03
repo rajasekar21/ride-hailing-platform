@@ -1,18 +1,6 @@
-FROM node:20-alpine
+FROM node:20-alpine AS build
 
 WORKDIR /app
-
-ARG VITE_USER_BASE
-ARG VITE_API_BASE
-ARG VITE_DRIVER_BASE
-ARG VITE_PAYMENT_BASE
-ARG VITE_RATING_BASE
-
-ENV VITE_USER_BASE=$VITE_USER_BASE
-ENV VITE_API_BASE=$VITE_API_BASE
-ENV VITE_DRIVER_BASE=$VITE_DRIVER_BASE
-ENV VITE_PAYMENT_BASE=$VITE_PAYMENT_BASE
-ENV VITE_RATING_BASE=$VITE_RATING_BASE
 
 COPY package.json .
 RUN npm install
@@ -21,8 +9,11 @@ COPY . .
 
 RUN npm run build
 
-RUN npm install -g serve
+FROM nginx:1.27-alpine
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 3000
 
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["nginx", "-g", "daemon off;"]
