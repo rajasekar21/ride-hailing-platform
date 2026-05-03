@@ -67,6 +67,8 @@ kubectl get svc
 
 Backend Minikube images are built from the standalone service repositories when `git` is available; the in-repo `services/*` folders are only fallback/reference copies.
 
+In GitHub Codespaces, `run-all.sh` also sets forwarded service ports to public visibility by default. Override with `CODESPACE_PORT_VISIBILITY=private` if needed.
+
 ### Docker Compose
 
 Use this path for quick Codespace integration validation and secondary evidence:
