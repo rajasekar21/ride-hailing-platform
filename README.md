@@ -23,6 +23,7 @@ Deployment source of truth:
 
 - Docker Compose builds backend services from the standalone service repositories listed below.
 - The in-repo `services/*` folders are retained as reference copies for assignment review, but cloud deployment should use the standalone repositories.
+- Current submission recording steps are in `docs/SUBMISSION_RECORDING_GUIDE.md`.
 
 ## Architecture & Data Design
 
@@ -152,6 +153,7 @@ kubectl logs deployment/notification --since=10m
 Primary docs:
 
 - `docs/README.md`
+- `docs/SUBMISSION_RECORDING_GUIDE.md`
 - `docs/api/API_DOCUMENTATION.md`
 - `docs/api/postman_collection.json`
 - `docs/api/openapi.json`
@@ -170,15 +172,18 @@ OpenAPI generation proof:
 ## Evidence Mapping
 
 All evidence assets are under `docs/screenshots/`.
+Generated command-output evidence from the live Docker Compose run is written under `docs/evidence/generated/`.
 
 Examples:
 
 - `evidence-docker-ps.png` -> `docker ps`
+- `service-frontend-dashboard.png` -> frontend dashboard after hard refresh
 - `evidence-kubectl-get-pods.png` -> `kubectl get pods`
 - `evidence-kubectl-get-svc.png` -> `kubectl get svc`
 - `evidence-k8s-probes-check.png` -> probe presence (`readinessProbe|livenessProbe`)
 - `evidence-metrics-*.png` -> service metrics outputs
 - `evidence-logs-notification-json.png` -> structured log proof
+- `docs/evidence/generated/compose-evidence-*.md` -> Compose status, validation pass, metrics, logs, and persisted-data proof
 - `videos/workflow-demo-playwright.webm` -> demo workflow video
 
 ## Standalone Service Repository Links
