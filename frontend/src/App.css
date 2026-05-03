@@ -144,6 +144,17 @@ select {
   padding-left: 18px;
 }
 
+.result-panel {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.result-panel pre {
+  max-height: 260px;
+  overflow: auto;
+  background: #ffffff;
+}
+
 .loading {
   margin: 30px auto;
   max-width: 320px;
