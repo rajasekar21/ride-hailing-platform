@@ -1,40 +1,16 @@
-#!/bin/bash
-set -e
-set -x
-echo "🌱 Seeding data..."
+#!/usr/bin/env bash
+set -euo pipefail
 
-# USER SERVICE
-if [ -f "services/user/seed.js" ]; then
-  echo "Seeding user service..."
-  (cd services/user && node seed.js)
-else
-  echo "⚠️ user seed.js not found, skipping..."
-fi
+cat <<'EOF'
+Host-side seeding is intentionally disabled.
 
-# DRIVER SERVICE (optional)
-if [ -f "services/driver/seed.js" ]; then
-  echo "Seeding driver service..."
-  (cd services/driver && node seed.js)
-else
-  echo "⚠️ driver seed.js not found, skipping..."
-fi
+Reason:
+- The mandatory path is Minikube via ./scripts/run-all.sh.
+- Service images/repos own their runtime seeding.
+- Running services/*/seed.js from the platform host can read the wrong CSV path
+  because services/* are reference copies while dataset/*.csv is the shared platform dataset.
 
-# RIDE SERVICE (optional)
-if [ -f "services/ride/seed.js" ]; then
-  echo "Seeding ride service..."
-  (cd services/ride && node seed.js)
-fi
-
-# PAYMENT SERVICE (optional)
-if [ -f "services/payment/seed.js" ]; then
-  echo "Seeding payment service..."
-  (cd services/payment && node seed.js)
-fi
-
-# RATING SERVICE (optional)
-if [ -f "services/rating/seed.js" ]; then
-  echo "Seeding rating service..."
-  (cd services/rating && node seed.js)
-fi
-
-echo "✅ Data seeding complete"
+Use these instead:
+- ./scripts/run-all.sh
+- ./scripts/validate.sh
+EOF
