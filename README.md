@@ -52,7 +52,24 @@ SQLite note:
 
 ## Run Options
 
+### Mandatory Minikube Run
+
+Use this path for the final project demonstration:
+
+```bash
+./scripts/run-all.sh
+minikube status
+kubectl get pods -o wide
+kubectl get svc
+```
+
+`run-all.sh` checks/installs required Linux CLI tools when possible, starts Minikube with the Docker driver, builds images into the Minikube Docker environment, applies manifests, starts port-forwards, starts the frontend, and runs validation.
+
+Backend Minikube images are built from the standalone service repositories when `git` is available; the in-repo `services/*` folders are only fallback/reference copies.
+
 ### Docker Compose
+
+Use this path for quick Codespace integration validation and secondary evidence:
 
 ```bash
 docker compose up -d --build
