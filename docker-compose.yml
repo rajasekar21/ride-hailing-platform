@@ -7,8 +7,9 @@ services:
       - "15672:15672"
 
   user:
-    build:
-      context: https://github.com/rajasekar21/ride-hailing-user-service.git#master
+    build: 
+      context: ./services
+      dockerfile: user/Dockerfile
     container_name: user
     environment:
       - DB_PATH=/data/users.db
@@ -22,7 +23,8 @@ services:
 
   driver:
     build:
-      context: https://github.com/rajasekar21/ride-hailing-driver-service.git#master
+      context: ./services
+      dockerfile: driver/Dockerfile
     container_name: driver
     environment:
       - DB_PATH=/data/drivers.db
@@ -36,7 +38,8 @@ services:
 
   ride:
     build:
-      context: https://github.com/rajasekar21/ride-hailing-trip-service.git#master
+      context: ./services
+      dockerfile: ride/Dockerfile
     container_name: ride
     environment:
       - DB_PATH=/data/rides.db
@@ -62,7 +65,8 @@ services:
 
   payment:
     build:
-      context: https://github.com/rajasekar21/ride-hailing-payment-service.git#master
+      context: ./services
+      dockerfile: payment/Dockerfile
     container_name: payment
     environment:
       - DB_PATH=/data/payments.db
@@ -79,10 +83,10 @@ services:
       - ./dataset:/dataset:ro
     ports:
       - "3003:3000"
-
   rating:
     build:
-      context: https://github.com/rajasekar21/ride-hailing-rating-service.git#master
+      context: ./services
+      dockerfile: rating/Dockerfile
     container_name: rating
     environment:
       - DB_PATH=/data/ratings.db
@@ -99,7 +103,8 @@ services:
 
   notification:
     build:
-      context: https://github.com/rajasekar21/ride-hailing-notification-service.git#master
+      context: ./services
+      dockerfile: notification/Dockerfile
     container_name: notification
     environment:
       - RABBITMQ_URL=amqp://rabbitmq:5672
@@ -111,8 +116,9 @@ services:
       - "3004:3000"
 
   auth:
-    build:
-      context: https://github.com/rajasekar21/ride-hailing-auth-service.git#master
+    build: 
+      context: ./services
+      dockerfile: auth/Dockerfile
     container_name: auth
     environment:
       - JWT_SECRET=ILoveIndia
