@@ -19,6 +19,12 @@ Implemented services:
 - `services/rating` (post-trip rating)
 - `services/auth` (JWT login)
 
+Deployment source of truth:
+
+- Docker Compose builds backend services from the standalone service repositories listed below.
+- The in-repo `services/*` folders are retained as reference copies for assignment review, but cloud deployment should use the standalone repositories.
+- Current submission recording steps are in `docs/SUBMISSION_RECORDING_GUIDE.md`.
+
 ## Architecture & Data Design
 
 - Microservices architecture with loose coupling.
@@ -46,7 +52,28 @@ SQLite note:
 
 ## Run Options
 
+### Mandatory Minikube Run
+
+Use this path for the final project demonstration:
+
+```bash
+./scripts/run-minikube.sh
+minikube status
+kubectl get pods -o wide
+kubectl get svc
+```
+
+`run-minikube.sh` checks/installs required Linux CLI tools when possible, starts Minikube with the Docker driver, builds images into the Minikube Docker environment, applies manifests, starts port-forwards, starts the frontend, and runs validation.
+
+Backend Minikube images are built from the standalone service repositories when `git` is available; the in-repo `services/*` folders are only fallback/reference copies.
+Runtime seeding is owned by the service images/repos. The platform runner does not execute `services/*/seed.js` on the host.
+Local `setup-frontend.sh` installs frontend dependencies only when `frontend/node_modules` is missing or `frontend/package-lock.json` changes.
+
+In GitHub Codespaces, `run-minikube.sh` also sets forwarded service ports to public visibility by default. Override with `CODESPACE_PORT_VISIBILITY=private` if needed.
+
 ### Docker Compose
+
+Use this path for quick Codespace integration validation and secondary evidence:
 
 ```bash
 docker compose up -d --build
@@ -147,6 +174,8 @@ kubectl logs deployment/notification --since=10m
 Primary docs:
 
 - `docs/README.md`
+- `docs/SUBMISSION_RECORDING_GUIDE.md`
+- `scripts/README.md`
 - `docs/api/API_DOCUMENTATION.md`
 - `docs/api/postman_collection.json`
 - `docs/api/openapi.json`
@@ -165,15 +194,18 @@ OpenAPI generation proof:
 ## Evidence Mapping
 
 All evidence assets are under `docs/screenshots/`.
+Generated command-output evidence from the live Docker Compose run is written under `docs/evidence/generated/`.
 
 Examples:
 
 - `evidence-docker-ps.png` -> `docker ps`
+- `service-frontend-dashboard.png` -> frontend dashboard after hard refresh
 - `evidence-kubectl-get-pods.png` -> `kubectl get pods`
 - `evidence-kubectl-get-svc.png` -> `kubectl get svc`
 - `evidence-k8s-probes-check.png` -> probe presence (`readinessProbe|livenessProbe`)
 - `evidence-metrics-*.png` -> service metrics outputs
 - `evidence-logs-notification-json.png` -> structured log proof
+- `docs/evidence/generated/compose-evidence-*.md` -> Compose status, validation pass, metrics, logs, and persisted-data proof
 - `videos/workflow-demo-playwright.webm` -> demo workflow video
 
 ## Standalone Service Repository Links

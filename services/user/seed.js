@@ -42,6 +42,7 @@ async function seed() {
     .on("end", async () => {
       await Rider.bulkCreate(results, { ignoreDuplicates: true });
       console.log(`✅ Seeded ${results.length} riders`);
+      await db.close();
     });
 }
 
